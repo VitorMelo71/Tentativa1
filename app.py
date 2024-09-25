@@ -8,6 +8,8 @@ from urllib.parse import urlencode
 from bs4 import BeautifulSoup
 from time import sleep
 import traceback
+import folium
+from streamlit_folium import st_folium
 
 # Carregar as credenciais do Firebase a partir do Secrets do Streamlit
 firebase_credentials = st.secrets["firebase_credentials"]
@@ -42,6 +44,17 @@ def save_response_to_file(response_json):
         print("Resposta salva no arquivo 'Coordenadas_Ônibus.json' para análise.")
     except Exception as e:
         print(f"Erro ao salvar resposta em JSON: {e}")
+
+# Função para exibir o mapa com a localização no OpenStreetMap
+def exibir_mapa(latitude, longitude):
+    # Criar um mapa com folium centrado na localização atual
+    mapa = folium.Map(location=[latitude, longitude], zoom_start=15)
+    
+    # Adicionar um marcador para a localização atual
+    folium.Marker([latitude, longitude], tooltip="Ônibus").add_to(mapa)
+    
+    # Exibir o mapa no Streamlit
+    st_folium(mapa, width=725)
 
 # Função para extrair latitude e longitude de um arquivo JSON
 def extrair_lat_lon(caminho_arquivo):
@@ -81,6 +94,8 @@ def extrair_lat_lon(caminho_arquivo):
                     print(f"Latitude: {latitude}, Longitude: {longitude}, Status: {status}")
                     # Enviar para o Firebase
                     enviar_para_firebase(latitude, longitude, status)
+                    # Exibir o mapa
+                    exibir_mapa(float(latitude), float(longitude))
                 else:
                     print("Latitude ou longitude não encontrados nos dados decodificados.")
             
