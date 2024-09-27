@@ -38,7 +38,6 @@ with tempfile.NamedTemporaryFile(mode='w+', suffix='.json', delete=False) as tem
 # Inicializar o Firestore
 db = firestore.client()
 
-
 # Função para buscar a última localização do Firestore
 def buscar_localizacao():
     doc_ref = db.collection(u'CoordenadasGPS').document(u'veiculo')
@@ -52,29 +51,35 @@ def buscar_localizacao():
     else:
         return None, None, None
 
-# Função para exibir o mapa no Streamlit com o ícone do ônibus
+# Função para exibir o mapa no Streamlit com o ícone do ônibus arredondado
 def exibir_mapa(latitude, longitude):
     mapa = folium.Map(location=[latitude, longitude], zoom_start=15)
 
-    # Adicionar o ícone personalizado (imagem do ônibus)
-    icon_bus = folium.CustomIcon("https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg", icon_size=(50, 50))
+    # Adicionar o ícone personalizado arredondado com CSS
+    html = f"""
+    <div style="border-radius: 50%; overflow: hidden; width: 50px; height: 50px;">
+        <img src="https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg" style="width: 100%; height: 100%;">
+    </div>
+    """
+    
+    iframe = folium.IFrame(html=html, width=60, height=60)
+    popup = folium.Popup(iframe, max_width=2650)
 
-    folium.Marker([latitude, longitude], tooltip="Ônibus", icon=icon_bus).add_to(mapa)
+    folium.Marker(
+        location=[latitude, longitude],
+        popup=popup,
+        tooltip="Ônibus"
+    ).add_to(mapa)
     
     st_folium(mapa, width=725)
 
-# Teste o código chamando a função de exibir o mapa
-latitude = -1.45478  # exemplo de latitude
-longitude = -48.47392  # exemplo de longitude
-exibir_mapa(latitude, longitude)
-
-st.title('Circular UFPA')
+st.title('Rastreamento de Ônibus em Tempo Real')
 
 # Atualizar localização a cada 10 segundos
 while True:
     latitude, longitude, status = buscar_localizacao()
     if latitude is not None and longitude is not None:
-        st.write(f"Status: {status}")
+        st.write(f"Localização atual: Latitude {latitude}, Longitude {longitude}, Status: {status}")
         exibir_mapa(latitude, longitude)
     else:
         st.write("Aguardando atualização de localização...")
