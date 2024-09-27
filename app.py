@@ -57,11 +57,7 @@ def buscar_localizacao():
 def exibir_mapa(latitude, longitude):
     mapa = folium.Map(location=[latitude, longitude], zoom_start=15)
 
-    # Adicionar o ícone personalizado (imagem do ônibus)
-    icon_bus = folium.CustomIcon(""https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg"
-", icon_size=(50, 50))
-
-    folium.Marker([latitude, longitude], tooltip="Ônibus", icon=icon_bus).add_to(mapa)
+   folium.Marker([latitude, longitude], tooltip="Ônibus", icon=icon_bus).add_to(mapa)
     
     st_folium(mapa, width=725)
 
