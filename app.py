@@ -64,7 +64,7 @@ st.title('Circular UFPA')
 while True:
     latitude, longitude, status = buscar_localizacao()
     if latitude is not None and longitude is not None:
-        st.write(f"Localização atual: Latitude {latitude}, Longitude {longitude}, Status: {status}")
+        st.write(f"Status: {status}")
         exibir_mapa(latitude, longitude)
     else:
         st.write("Aguardando atualização de localização...")
