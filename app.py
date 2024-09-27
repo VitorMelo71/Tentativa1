@@ -38,7 +38,6 @@ with tempfile.NamedTemporaryFile(mode='w+', suffix='.json', delete=False) as tem
 # Inicializar o Firestore
 db = firestore.client()
 
-st.write("Firebase conectado com sucesso!")
 
 # Função para buscar a última localização do Firestore
 def buscar_localizacao():
