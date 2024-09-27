@@ -53,10 +53,15 @@ def buscar_localizacao():
     else:
         return None, None, None
 
-# Função para exibir o mapa no Streamlit
+# Função para exibir o mapa no Streamlit com o ícone do ônibus
 def exibir_mapa(latitude, longitude):
     mapa = folium.Map(location=[latitude, longitude], zoom_start=15)
-    folium.Marker([latitude, longitude], tooltip="Ônibus").add_to(mapa)
+
+    # Adicionar o ícone personalizado (imagem do ônibus)
+    icon_bus = folium.CustomIcon("https://github.com/VitorMelo71/Tentativa1/blob/main/sa.jpg", icon_size=(50, 50))
+
+    folium.Marker([latitude, longitude], tooltip="Ônibus", icon=icon_bus).add_to(mapa)
+    
     st_folium(mapa, width=725)
 
 st.title('Rastreamento de Ônibus em Tempo Real')
