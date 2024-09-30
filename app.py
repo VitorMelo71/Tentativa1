@@ -73,7 +73,7 @@ def exibir_mapa(latitude, longitude):
     
     st_folium(mapa, width=725)
 
-st.title('Rastreamento de Ônibus em Tempo Real')
+st.title('Circular UFPA')
 
 # Atualizar localização a cada 10 segundos
 while True:
