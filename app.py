@@ -57,7 +57,7 @@ def exibir_mapa(latitude, longitude):
 
     # Adicionar o ícone personalizado arredondado com CSS
     html = f"""
-    <div style="border-radius: 50%; overflow: hidden; width: 50px; height: 50px;">
+    <div style="border-radius: 50%; overflow: hidden; width: 30px; height: 30px;">
         <img src="https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg" style="width: 100%; height: 100%;">
     </div>
     """
