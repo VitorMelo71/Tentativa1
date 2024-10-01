@@ -52,10 +52,14 @@ def buscar_localizacao():
         return None, None, None
 
 # Função para exibir o mapa no Streamlit com o ícone do ônibus arredondado
-def exibir_mapa(latitude, longitude):
-    mapa = folium.Map(location=[latitude, longitude], zoom_start=15)
+def exibir_mapa(latitude, longitude, last_position=None):
+    # Usar última posição se disponível, senão centralizar no veículo
+    if last_position:
+        mapa = folium.Map(location=last_position, zoom_start=15)
+    else:
+        mapa = folium.Map(location=[latitude, longitude], zoom_start=15)
 
-    # Adicionar o ícone personalizado arredondado com CSS
+    # Adicionar o ícone personalizado arredondado
     html = f"""
     <div style="border-radius: 50%; overflow: hidden; width: 30px; height: 30px;">
         <img src="https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg" style="width: 100%; height: 100%;">
@@ -71,16 +75,24 @@ def exibir_mapa(latitude, longitude):
         tooltip="Ônibus"
     ).add_to(mapa)
     
-    st_folium(mapa, width=300)
+    # Exibir o mapa com dimensões ajustadas para iPhone 11
+    map_data = st_folium(mapa, width=375, height=812, returned_objects=["last_center"])
+
+    # Retornar a última posição visualizada pelo usuário
+    return map_data.get("last_center", [latitude, longitude])
 
 st.title('Circular UFPA')
+
+# Inicializar variável para guardar última posição
+last_position = None
 
 # Atualizar localização a cada 10 segundos
 while True:
     latitude, longitude, status = buscar_localizacao()
     if latitude is not None and longitude is not None:
         st.write(f"Status: {status}")
-        exibir_mapa(latitude, longitude)
+        # Atualizar a última posição
+        last_position = exibir_mapa(latitude, longitude, last_position)
     else:
         st.write("Aguardando atualização de localização...")
 
