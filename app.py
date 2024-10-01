@@ -18,22 +18,16 @@ firebase_credentials = {
     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
     "token_uri": "https://oauth2.googleapis.com/token",
     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-x0vc4%40banco-gps.iam.gserviceaccount.com",
-    "universe_domain": "googleapis.com"
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-x0vc4%40banco-gps.iam.gserviceaccount.com"
 }
 
 # Corrigir quebras de linha na chave privada
 firebase_credentials["private_key"] = firebase_credentials["private_key"].replace("\\n", "\n")
 
-# Criar um arquivo temporário para armazenar as credenciais do Firebase
-with tempfile.NamedTemporaryFile(mode='w+', suffix='.json', delete=False) as temp_file:
-    json.dump(firebase_credentials, temp_file)
-    temp_file.flush()
-
-    # Inicializar Firebase com o caminho do arquivo temporário de credenciais
-    if not firebase_admin._apps:  # Verificar se o Firebase já foi inicializado
-        cred = credentials.Certificate(temp_file.name)
-        firebase_admin.initialize_app(cred)
+# Inicializar Firebase apenas se não estiver inicializado
+if not firebase_admin._apps:
+    cred = credentials.Certificate(firebase_credentials)
+    firebase_admin.initialize_app(cred)
 
 # Inicializar o Firestore
 db = firestore.client()
