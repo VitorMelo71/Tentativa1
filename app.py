@@ -1,15 +1,17 @@
+import os
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
 import json
-import os
+import tempfile
 import folium
 from streamlit_folium import st_folium
 import time
-from dotenv import load_dotenv
 
-# Carregar variáveis de ambiente do arquivo .env
-load_dotenv()
+# Verifique se as variáveis de ambiente estão sendo carregadas corretamente
+st.write("FIREBASE_PRIVATE_KEY:", os.getenv("FIREBASE_PRIVATE_KEY"))
+st.write("FIREBASE_PROJECT_ID:", os.getenv("FIREBASE_PROJECT_ID"))
+st.write("FIREBASE_CLIENT_EMAIL:", os.getenv("FIREBASE_CLIENT_EMAIL"))
 
 # Carregar as credenciais do Firebase a partir das variáveis de ambiente
 firebase_credentials = {
@@ -21,8 +23,8 @@ firebase_credentials = {
     "client_id": os.getenv("FIREBASE_CLIENT_ID"),
     "auth_uri": os.getenv("FIREBASE_AUTH_URI"),
     "token_uri": os.getenv("FIREBASE_TOKEN_URI"),
-    "auth_provider_x509_cert_url": os.getenv("FIREBASE_AUTH_PROVIDER_CERT_URL"),
-    "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_CERT_URL"),
+    "auth_provider_x509_cert_url": os.getenv("FIREBASE_AUTH_PROVIDER_X509_CERT_URL"),
+    "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_X509_CERT_URL")
 }
 
 # Inicializar Firebase com as credenciais carregadas
