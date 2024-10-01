@@ -71,7 +71,7 @@ def exibir_mapa(latitude, longitude):
         tooltip="Ônibus"
     ).add_to(mapa)
     
-    st_folium(mapa, width=725)
+    st_folium(mapa, width=300)
 
 st.title('Circular UFPA')
 
@@ -79,7 +79,7 @@ st.title('Circular UFPA')
 while True:
     latitude, longitude, status = buscar_localizacao()
     if latitude is not None and longitude is not None:
-        st.write(f"Localização atual: Latitude {latitude}, Longitude {longitude}, Status: {status}")
+        st.write(f"Status: {status}")
         exibir_mapa(latitude, longitude)
     else:
         st.write("Aguardando atualização de localização...")
