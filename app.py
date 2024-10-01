@@ -7,7 +7,7 @@ import folium
 from streamlit_folium import st_folium
 import time
 
-# Suas credenciais do Firebase
+# Carregar as credenciais do Firebase a partir do Secrets do Streamlit
 firebase_credentials = {
     "type": "service_account",
     "project_id": "banco-gps",
@@ -22,16 +22,18 @@ firebase_credentials = {
     "universe_domain": "googleapis.com"
 }
 
-# Corrigir quebras de linha na chave privada, se necessário
+# Corrigir quebras de linha na chave privada
 firebase_credentials["private_key"] = firebase_credentials["private_key"].replace("\\n", "\n")
 
-# Inicializar Firebase com um bloco try-except para evitar múltiplas inicializações
-try:
-    if not firebase_admin._apps:
-        cred = credentials.Certificate(firebase_credentials)
+# Criar um arquivo temporário para armazenar as credenciais do Firebase
+with tempfile.NamedTemporaryFile(mode='w+', suffix='.json', delete=False) as temp_file:
+    json.dump(firebase_credentials, temp_file)
+    temp_file.flush()
+
+    # Inicializar Firebase com o caminho do arquivo temporário de credenciais
+    if not firebase_admin._apps:  # Verificar se o Firebase já foi inicializado
+        cred = credentials.Certificate(temp_file.name)
         firebase_admin.initialize_app(cred)
-except ValueError:
-    st.warning("O Firebase já foi inicializado.")
 
 # Inicializar o Firestore
 db = firestore.client()
@@ -40,7 +42,7 @@ db = firestore.client()
 def buscar_localizacao():
     doc_ref = db.collection(u'CoordenadasGPS').document(u'veiculo')
     doc = doc_ref.get()
-    if doc.exists():
+    if doc.exists:
         data = doc.to_dict()
         latitude = data.get('latitude')
         longitude = data.get('longitude')
@@ -50,37 +52,35 @@ def buscar_localizacao():
         return None, None, None
 
 # Função para exibir o mapa no Streamlit com o ícone do ônibus arredondado
-def exibir_mapa(latitude, longitude, last_position=None):
-    if last_position:
-        mapa = folium.Map(location=last_position, zoom_start=15)
-    else:
-        mapa = folium.Map(location=[latitude, longitude], zoom_start=15)
+def exibir_mapa(latitude, longitude):
+    mapa = folium.Map(location=[latitude, longitude], zoom_start=15)
 
-    # Adicionar o ícone personalizado arredondado
+    # Adicionar o ícone personalizado arredondado com CSS
+    html = f"""
+    <div style="border-radius: 50%; overflow: hidden; width: 30px; height: 30px;">
+        <img src="https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg" style="width: 100%; height: 100%;">
+    </div>
+    """
+    
+    iframe = folium.IFrame(html=html, width=60, height=60)
+    popup = folium.Popup(iframe, max_width=2650)
+
     folium.Marker(
         location=[latitude, longitude],
-        popup="Ônibus",
+        popup=popup,
         tooltip="Ônibus"
     ).add_to(mapa)
     
-    # Exibir o mapa com dimensões específicas para um iPhone 11 (375x812)
-    map_data = st_folium(mapa, width=375, height=812, returned_objects=["last_center"])
+    st_folium(mapa, width=300)
 
-    return map_data.get("last_center", [latitude, longitude])
-
-# Título da página
 st.title('Circular UFPA')
-
-# Inicializar variável para guardar última posição
-last_position = None
 
 # Atualizar localização a cada 10 segundos
 while True:
     latitude, longitude, status = buscar_localizacao()
-    
     if latitude is not None and longitude is not None:
         st.write(f"Status: {status}")
-        last_position = exibir_mapa(latitude, longitude, last_position)
+        exibir_mapa(latitude, longitude)
     else:
         st.write("Aguardando atualização de localização...")
 
