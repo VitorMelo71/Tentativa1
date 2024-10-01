@@ -22,13 +22,16 @@ firebase_credentials = {
     "universe_domain": "googleapis.com"
 }
 
-# Corrigir quebras de linha na chave privada
+# Corrigir quebras de linha na chave privada, se necessário
 firebase_credentials["private_key"] = firebase_credentials["private_key"].replace("\\n", "\n")
 
-# Inicializar Firebase
-if not firebase_admin._apps:
-    cred = credentials.Certificate(firebase_credentials)
-    firebase_admin.initialize_app(cred)
+# Inicializar Firebase com um bloco try-except para evitar múltiplas inicializações
+try:
+    if not firebase_admin._apps:
+        cred = credentials.Certificate(firebase_credentials)
+        firebase_admin.initialize_app(cred)
+except ValueError:
+    st.warning("O Firebase já foi inicializado.")
 
 # Inicializar o Firestore
 db = firestore.client()
