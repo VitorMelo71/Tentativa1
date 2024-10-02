@@ -1,7 +1,4 @@
 streamlit
-firebase-admin
 requests
-beautifulsoup4
-python-dotenv
-folium
-streamlit_folium
+pandas
+pydeck
