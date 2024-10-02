@@ -7,7 +7,7 @@ import time
 
 # Configuração da API do Firestore e do Google Maps
 FIRESTORE_API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
-GOOGLE_MAPS_API_KEY = "AIzaSyDtRhUAYOYPgpqBcxT0f_Cx02G8r6bhVaA"
+GOOGLE_MAPS_API_KEY = "AIzaSyAvBYntkiyjBNpU96UdMSoD5cavd3lqQtY"
 PROJECT_ID = "banco-gps"
 COLLECTION = "CoordenadasGPS"
 
