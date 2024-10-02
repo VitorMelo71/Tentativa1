@@ -44,31 +44,31 @@ def generate_map_html(lat, lon):
     </html>
     """
 
-# Renderiza o mapa inicial
-st.set_page_config(page_title="CEAMAZON GPS", layout="centered")
-st.title("CEAMAZON GPS - Rastreamento")
-
 # Inicializa a latitude e longitude
-lat = -1.46906
-lon = -48.44755
+if 'lat' not in st.session_state:
+    st.session_state.lat = -1.46906
+if 'lon' not in st.session_state:
+    st.session_state.lon = -48.44755
 
 # Gera o mapa inicial
-map_html = generate_map_html(lat, lon)
+map_html = generate_map_html(st.session_state.lat, st.session_state.lon)
 components.html(map_html, height=500)
 
-# Simula atualizações de posição
-def update_position(lat, lon):
-    # Atualiza a posição do veículo periodicamente
-    for i in range(10):
-        lat += 0.001  # Simula uma nova posição
-        lon += 0.001  # Simula uma nova posição
-        # Passa a nova posição ao mapa via Streamlit custom components
-        components.html(f"""
-        <script>
-            updateMarkerPosition({lat}, {lon});
-        </script>
-        """, height=0, width=0)
-        time.sleep(5)
+# Função para atualizar a posição do veículo
+def update_position():
+    st.session_state.lat += 0.001  # Simula uma nova posição
+    st.session_state.lon += 0.001  # Simula uma nova posição
 
-# Chama a função para atualizar a posição
-update_position(lat, lon)
+# Botão para atualizar manualmente
+if st.button('Atualizar Posição do Veículo'):
+    update_position()
+
+# Atualização automática a cada 10 segundos
+st_autorefresh(interval=10 * 1000, key="refresh")
+
+# Atualiza a posição do marcador dinamicamente
+components.html(f"""
+<script>
+    updateMarkerPosition({st.session_state.lat}, {st.session_state.lon});
+</script>
+""", height=0, width=0)
