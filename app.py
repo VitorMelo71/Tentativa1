@@ -1,55 +1,68 @@
 import streamlit as st
-import folium
-from streamlit_folium import st_folium
-import firebase_admin
-from firebase_admin import credentials, firestore
+import requests
+import pandas as pd
+import pydeck as pdk
+import time
 
-# Configurar a chave de API do Firebase (NÃO RECOMENDADO para produção)
+# Configuração da API do Firestore
 API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
+PROJECT_ID = "banco-gps"  # Substitua pelo ID do projeto
+COLLECTION = "CoordenadasGPS"  # Nome da coleção conforme visto na imagem
 
-# Configurar o Firebase usando a chave de API
-def initialize_firebase():
-    if not firebase_admin._apps:
-        cred = credentials.Certificate({
-            "type": "service_account",
-            "project_id": "<your_project_id>",
-            "private_key_id": "<private_key_id>",
-            "private_key": "<private_key>",
-            "client_email": "<client_email>",
-            "client_id": "<client_id>",
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-x0vc4%40banco-gps.iam.gserviceaccount.com"
-        })
-        firebase_admin.initialize_app(cred)
+FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/{COLLECTION}?key={API_KEY}"
 
-initialize_firebase()
+# Função para buscar dados do Firestore via API REST
+def get_tracking_data():
+    response = requests.get(FIRESTORE_URL)
+    data = response.json()
 
-# Conectar ao Firestore
-db = firestore.client()
+    records = []
+    if 'documents' in data:
+        for doc in data['documents']:
+            fields = doc['fields']
+            records.append({
+                'latitude': float(fields['latitude']['stringValue']),
+                'longitude': float(fields['longitude']['stringValue']),
+                'status': fields['status']['stringValue']
+            })
+    return pd.DataFrame(records)
 
-# Função para criar o mapa no formato responsivo para celular
-def create_map():
-    m = folium.Map(location=[-15.7801, -47.9292], zoom_start=12)
+# Configuração da página para celular (iPhone 11)
+st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
-    # Se o usuário mover o mapa, mantemos a última posição
-    st_map = st_folium(m, width=500, height=700)
-    return st_map
+st.title("Mapa de Rastreamento")
 
-st.title("Firebase Firestore & Map Example")
+# Inicializa um dataframe vazio
+data_df = pd.DataFrame(columns=['latitude', 'longitude', 'status'])
 
-# Exemplo de leitura de dados do Firestore
-def read_from_firestore():
-    users_ref = db.collection(u'users')
-    docs = users_ref.stream()
+# Loop de atualização
+while True:
+    # Carregar dados do Firestore
+    data_df = get_tracking_data()
 
-    for doc in docs:
-        st.write(f'{doc.id} => {doc.to_dict()}')
+    if not data_df.empty:
+        # Mostrar o mapa se houver dados
+        midpoint = (data_df['latitude'].astype(float).mean(), data_df['longitude'].astype(float).mean())
+        st.pydeck_chart(pdk.Deck(
+            initial_view_state=pdk.ViewState(
+                latitude=midpoint[0],
+                longitude=midpoint[1],
+                zoom=14,
+                pitch=50,
+            ),
+            layers=[
+                pdk.Layer(
+                    'ScatterplotLayer',
+                    data=data_df,
+                    get_position='[longitude, latitude]',
+                    get_color='[200, 30, 0, 160]',
+                    get_radius=200,
+                ),
+            ],
+        ))
+    else:
+        st.write("Aguardando dados de rastreamento...")
 
-# Mostra o mapa no app
-st_map = create_map()
-
-# Exemplo de leitura de dados do Firestore
-if st.button("Carregar dados do Firestore"):
-    read_from_firestore()
+    # Pausa para atualizar a cada 10 segundos
+    time.sleep(10)
+    st.experimental_rerun()
