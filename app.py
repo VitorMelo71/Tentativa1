@@ -6,8 +6,8 @@ import time
 
 # Configuração da API do Firestore
 API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
-PROJECT_ID = "banco-gps"  # Substitua pelo ID do projeto
-COLLECTION = "CoordenadasGPS"  # Nome da coleção conforme visto na imagem
+PROJECT_ID = "banco-gps"
+COLLECTION = "CoordenadasGPS"
 
 FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/{COLLECTION}?key={API_KEY}"
 
@@ -35,7 +35,9 @@ st.title("Mapa de Rastreamento")
 # Inicializa um dataframe vazio
 data_df = pd.DataFrame(columns=['latitude', 'longitude', 'status'])
 
-# Loop de atualização
+# Intervalo de atualização
+update_interval = 10  # segundos
+
 while True:
     # Carregar dados do Firestore
     data_df = get_tracking_data()
@@ -63,6 +65,5 @@ while True:
     else:
         st.write("Aguardando dados de rastreamento...")
 
-    # Pausa para atualizar a cada 10 segundos
-    time.sleep(10)
-    st.experimental_rerun()
+    # Pausa para atualizar
+    time.sleep(update_interval)
