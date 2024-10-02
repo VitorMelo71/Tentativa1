@@ -1,7 +1,8 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import time
 
-# Configuração da API do Firestore e do Google Maps
+# Configuração da API do Google Maps
 GOOGLE_MAPS_API_KEY = "AIzaSyAvBYntkiyjBNpU96UdMSoD5cavd3lqQtY"
 
 # Função para gerar o HTML/JS do Google Maps
@@ -46,15 +47,17 @@ def generate_map_html(lat, lon):
 # Renderiza o mapa inicial
 st.set_page_config(page_title="CEAMAZON GPS", layout="centered")
 st.title("CEAMAZON GPS - Rastreamento")
+
+# Inicializa a latitude e longitude
 lat = -1.46906
 lon = -48.44755
+
+# Gera o mapa inicial
 map_html = generate_map_html(lat, lon)
 components.html(map_html, height=500)
 
 # Simula atualizações de posição
-import time
-
-def update_position():
+def update_position(lat, lon):
     # Atualiza a posição do veículo periodicamente
     for i in range(10):
         lat += 0.001  # Simula uma nova posição
@@ -67,4 +70,5 @@ def update_position():
         """, height=0, width=0)
         time.sleep(5)
 
-update_position()
+# Chama a função para atualizar a posição
+update_position(lat, lon)
