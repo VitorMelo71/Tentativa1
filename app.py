@@ -12,12 +12,15 @@ import time
 # Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
-# Carregar as credenciais do Firebase a partir das variáveis de ambiente
+# Garantir que os \n na chave privada sejam interpretados corretamente
+private_key = os.getenv("FIREBASE_PRIVATE_KEY").replace("\\n", "\n")
+
+# Carregar credenciais do Firebase a partir das variáveis de ambiente
 firebase_credentials = {
     "type": os.getenv("FIREBASE_TYPE"),
     "project_id": os.getenv("FIREBASE_PROJECT_ID"),
     "private_key_id": os.getenv("FIREBASE_PRIVATE_KEY_ID"),
-    "private_key": os.getenv("FIREBASE_PRIVATE_KEY").replace("\\n", "\n"),
+    "private_key": private_key,
     "client_email": os.getenv("FIREBASE_CLIENT_EMAIL"),
     "client_id": os.getenv("FIREBASE_CLIENT_ID"),
     "auth_uri": os.getenv("FIREBASE_AUTH_URI"),
@@ -26,7 +29,7 @@ firebase_credentials = {
     "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_X509_CERT_URL")
 }
 
-# Inicializar Firebase com as credenciais carregadas
+# Inicializar o Firebase
 if not firebase_admin._apps:
     cred = credentials.Certificate(firebase_credentials)
     firebase_admin.initialize_app(cred)
