@@ -4,13 +4,27 @@ import json
 import firebase_admin
 from firebase_admin import credentials
 
-# Verificar se o segredo está sendo carregado
+# Carregando o segredo FIREBASE_CREDENTIALS da variável de ambiente
 firebase_credentials_str = os.getenv("FIREBASE_CREDENTIALS")
 
+# Verifica se o segredo foi carregado corretamente
 if firebase_credentials_str is None:
     st.error("O segredo FIREBASE_CREDENTIALS não está carregado.")
 else:
     st.write("Segredo FIREBASE_CREDENTIALS carregado com sucesso.")
+
+    try:
+        # Tente carregar o conteúdo como um JSON
+        firebase_credentials = json.loads(firebase_credentials_str)
+        st.write("Firebase credentials carregadas corretamente.")
+        
+        # Aqui você pode inicializar o Firebase com as credenciais carregadas
+        # Exemplo:
+        # cred = credentials.Certificate(firebase_credentials)
+        # firebase_admin.initialize_app(cred)
+
+    except json.JSONDecodeError:
+        st.error("Erro ao decodificar o segredo FIREBASE_CREDENTIALS como JSON.")
     
 # Recuperar o conteúdo dos segredos do GitHub
 firebase_credentials_str = os.getenv("FIREBASE_CREDENTIALS")
