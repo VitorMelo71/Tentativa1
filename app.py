@@ -30,7 +30,7 @@ def get_tracking_data():
 # Configuração da página para celular (iPhone 11)
 st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
-st.title("Mapa de Rastreamento")
+st.title("Ceamazon")
 
 # Verificar e inicializar o session state para o mapa
 if 'zoom' not in st.session_state:
