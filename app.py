@@ -30,24 +30,41 @@ def get_tracking_data():
 # Configuração da página para celular (iPhone 11)
 st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
-st.title("Ceamazon")
+st.title("Mapa de Rastreamento")
 
-# Atualização automática a cada 10 segundos
-st.experimental_set_query_params(interval=10)  # Define o intervalo de atualização (em segundos)
+# Verificar e inicializar o session state para o mapa
+if 'zoom' not in st.session_state:
+    st.session_state['zoom'] = 15  # Zoom padrão
+if 'center' not in st.session_state:
+    st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
 
 # Carregar dados do Firestore
 data_df = get_tracking_data()
 
 if not data_df.empty:
-    # Criar o mapa centrado no primeiro ponto de dados
-    m = folium.Map(location=[data_df['latitude'].iloc[0], data_df['longitude'].iloc[0]], zoom_start=15)
+    # Definir o centro do mapa com base nos dados ou usar o estado atual do centro
+    center_lat = data_df['latitude'].iloc[0]
+    center_lon = data_df['longitude'].iloc[0]
+
+    # Botão para centralizar no veículo
+    if st.button('Centralizar no Veículo'):
+        st.session_state['center'] = [center_lat, center_lon]
+        st.session_state['zoom'] = 17  # Ajusta o zoom para um nível mais próximo ao veículo
+
+    # Criar o mapa centrado no estado atual do mapa ou nos dados
+    m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
 
     # Adicionar marcador para cada veículo
     for index, row in data_df.iterrows():
         folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(m)
 
-    # Exibir o mapa
-    st_folium(m, width=725)
+    # Exibir o mapa e capturar a interação do usuário
+    map_output = st_folium(m, width=725, height=500)
+    
+    # Se houver interação do usuário, salvar o novo estado
+    if map_output:
+        st.session_state['center'] = [map_output['center']['lat'], map_output['center']['lng']]
+        st.session_state['zoom'] = map_output['zoom']
 
 else:
     st.write("Aguardando dados de rastreamento...")
