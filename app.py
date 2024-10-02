@@ -1,8 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
-import folium
-from streamlit_folium import st_folium
+import pydeck as pdk
 import time
 
 # Configuração da API do Firestore
@@ -33,38 +32,48 @@ st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
 st.title("Mapa de Rastreamento")
 
-# Verificar e inicializar o session state para o mapa
-if 'zoom' not in st.session_state:
-    st.session_state['zoom'] = 15  # Zoom padrão
-if 'center' not in st.session_state:
+# Inicializa o mapa uma única vez
+if 'map_initialized' not in st.session_state:
+    st.session_state['map_initialized'] = True
+    st.session_state['zoom'] = 15
     st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
 
 # Cria um espaço reservado para o mapa
 map_placeholder = st.empty()
 
-# Inicializa o mapa uma única vez
-m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
-
 # Exibir o mapa inicialmente
-with map_placeholder:
-    map_output = st_folium(m, width=725, height=500)
-
-# Atualiza o ponto de localização no mapa sem recarregar a página
 while True:
     # Carregar dados do Firestore
     data_df = get_tracking_data()
 
     if not data_df.empty:
-        # Remover todos os pontos antigos
-        m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
+        # Definir o centro do mapa baseado no primeiro ponto de dados
+        st.session_state['center'] = [data_df['latitude'].iloc[0], data_df['longitude'].iloc[0]]
 
-        # Atualizar o ponto do veículo no mapa
-        for index, row in data_df.iterrows():
-            folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(m)
+        # Criar a camada de pontos (veículos)
+        layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=data_df,
+            get_position='[longitude, latitude]',
+            get_color='[200, 30, 0, 160]',
+            get_radius=200,
+        )
 
-        # Atualizar o mapa no espaço reservado
+        # Configurar a visualização inicial
+        view_state = pdk.ViewState(
+            latitude=st.session_state['center'][0],
+            longitude=st.session_state['center'][1],
+            zoom=st.session_state['zoom'],
+            pitch=50,
+        )
+
+        # Renderizar o mapa apenas uma vez, atualizando os pontos
         with map_placeholder:
-            st_folium(m, width=725, height=500)
-    
+            r = pdk.Deck(layers=[layer], initial_view_state=view_state)
+            st.pydeck_chart(r)
+
+    else:
+        st.write("Aguardando dados de rastreamento...")
+
     # Pausar por um intervalo de tempo antes da próxima atualização
     time.sleep(10)
