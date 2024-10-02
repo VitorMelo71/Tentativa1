@@ -55,6 +55,9 @@ while True:
     data_df = get_tracking_data()
 
     if not data_df.empty:
+        # Remover todos os pontos antigos
+        m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
+
         # Atualizar o ponto do veículo no mapa
         for index, row in data_df.iterrows():
             folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(m)
