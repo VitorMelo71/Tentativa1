@@ -3,3 +3,4 @@ requests
 pandas
 pydeck
 folium
+streamlit_folium
