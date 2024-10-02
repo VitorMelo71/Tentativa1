@@ -45,12 +45,7 @@ if not data_df.empty:
     # Definir o centro do mapa com base nos dados ou usar o estado atual do centro
     center_lat = data_df['latitude'].iloc[0]
     center_lon = data_df['longitude'].iloc[0]
-
-    # Botão para centralizar no veículo
-    if st.button('Centralizar no Veículo'):
-        st.session_state['center'] = [center_lat, center_lon]
-        st.session_state['zoom'] = 17  # Ajusta o zoom para um nível mais próximo ao veículo
-
+    
     # Criar o mapa centrado no estado atual do mapa ou nos dados
     m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
 
