@@ -30,7 +30,7 @@ def get_tracking_data():
 # Configuração da página para celular (iPhone 11)
 st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
-st.title("Mapa de Rastreamento")
+st.title("Ceamazon")
 
 # Atualização automática a cada 10 segundos
 st.experimental_set_query_params(interval=10)  # Define o intervalo de atualização (em segundos)
