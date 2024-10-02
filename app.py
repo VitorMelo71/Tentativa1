@@ -35,6 +35,9 @@ st.title("Mapa de Rastreamento")
 # Inicializa um dataframe vazio
 data_df = pd.DataFrame(columns=['latitude', 'longitude', 'status'])
 
+# Cria um espaço vazio para o mapa que será atualizado
+map_placeholder = st.empty()
+
 # Intervalo de atualização
 update_interval = 10  # segundos
 
@@ -45,23 +48,26 @@ while True:
     if not data_df.empty:
         # Mostrar o mapa se houver dados
         midpoint = (data_df['latitude'].astype(float).mean(), data_df['longitude'].astype(float).mean())
-        st.pydeck_chart(pdk.Deck(
-            initial_view_state=pdk.ViewState(
-                latitude=midpoint[0],
-                longitude=midpoint[1],
-                zoom=14,
-                pitch=50,
-            ),
-            layers=[
-                pdk.Layer(
-                    'ScatterplotLayer',
-                    data=data_df,
-                    get_position='[longitude, latitude]',
-                    get_color='[200, 30, 0, 160]',
-                    get_radius=200,
+        
+        # Atualiza o conteúdo do espaço reservado pelo mapa
+        with map_placeholder:
+            st.pydeck_chart(pdk.Deck(
+                initial_view_state=pdk.ViewState(
+                    latitude=midpoint[0],
+                    longitude=midpoint[1],
+                    zoom=14,
+                    pitch=50,
                 ),
-            ],
-        ))
+                layers=[
+                    pdk.Layer(
+                        'ScatterplotLayer',
+                        data=data_df,
+                        get_position='[longitude, latitude]',
+                        get_color='[200, 30, 0, 160]',
+                        get_radius=200,
+                    ),
+                ],
+            ))
     else:
         st.write("Aguardando dados de rastreamento...")
 
