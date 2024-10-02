@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 import time
 
 # Configuração da API do Google Maps
-GOOGLE_MAPS_API_KEY = "AIzaSyAvBYntkiyjBNpU96UdMSoD5cavd3lqQtY"
+GOOGLE_MAPS_API_KEY = "AIzaSyBJg0w7kTJ2tNWuEeeKgMPSqe97lrFel1w"
 
 # Função para gerar o HTML/JS do Google Maps
 def generate_map_html(lat, lon):
