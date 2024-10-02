@@ -1,15 +1,17 @@
 import streamlit as st
 import requests
 import pandas as pd
-import pydeck as pdk
+import folium
+from streamlit_folium import st_folium
 import time
 
-# Configuração da API do Firestore
-API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
+# Configuração da API do Firestore e do Google Maps
+FIRESTORE_API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
+GOOGLE_MAPS_API_KEY = "AIzaSyDtRhUAYOYPgpqBcxT0f_Cx02G8r6bhVaA"
 PROJECT_ID = "banco-gps"
 COLLECTION = "CoordenadasGPS"
 
-FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/{COLLECTION}?key={API_KEY}"
+FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/{COLLECTION}?key={FIRESTORE_API_KEY}"
 
 # Função para buscar dados do Firestore via API REST
 def get_tracking_data():
@@ -27,53 +29,44 @@ def get_tracking_data():
             })
     return pd.DataFrame(records)
 
-# Configuração da página
+# Configuração da página para celular (iPhone 11)
 st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
-st.title("CEAMAZON")
+st.title("Mapa de Rastreamento - Google Maps")
 
-# Inicializa o mapa uma única vez
+# Inicializa o mapa apenas uma vez e mantém a posição e o zoom
 if 'map_initialized' not in st.session_state:
-    st.session_state['map_initialized'] = True
     st.session_state['zoom'] = 15
     st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
+    st.session_state['map_initialized'] = True
 
 # Cria um espaço reservado para o mapa
 map_placeholder = st.empty()
 
-# Exibir o mapa inicialmente
+# Inicializa o mapa usando Google Maps
+m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
+
+# Adiciona o TileLayer do Google Maps
+google_maps_tile = f"https://mt1.google.com/vt/lyrs=r&x={{x}}&y={{y}}&z={{z}}&key={GOOGLE_MAPS_API_KEY}"
+folium.TileLayer(tiles=google_maps_tile, attr="Google Maps", name="Google Maps").add_to(m)
+
+# Exibe o mapa inicialmente
+with map_placeholder:
+    st_folium(m, width=725, height=500)
+
+# Atualiza o ponto de localização no mapa sem recarregar a página
 while True:
     # Carregar dados do Firestore
     data_df = get_tracking_data()
 
     if not data_df.empty:
-        # Definir o centro do mapa baseado no primeiro ponto de dados
-        st.session_state['center'] = [data_df['latitude'].iloc[0], data_df['longitude'].iloc[0]]
+        # Limpa os marcadores anteriores e insere novos marcadores com base na nova localização
+        for index, row in data_df.iterrows():
+            folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(m)
 
-        # Criar a camada de pontos (veículos)
-        layer = pdk.Layer(
-            "ScatterplotLayer",
-            data=data_df,
-            get_position='[longitude, latitude]',
-            get_color='[200, 30, 0, 160]',
-            get_radius=20,
-        )
-
-        # Configurar a visualização inicial
-        view_state = pdk.ViewState(
-            latitude=st.session_state['center'][0],
-            longitude=st.session_state['center'][1],
-            zoom=st.session_state['zoom'],
-            pitch=50,
-        )
-
-        # Renderizar o mapa apenas uma vez, atualizando os pontos
+        # Atualiza o mapa no espaço reservado sem recriá-lo
         with map_placeholder:
-            r = pdk.Deck(layers=[layer], initial_view_state=view_state)
-            st.pydeck_chart(r)
+            st_folium(m, width=725, height=500)
 
-    else:
-        st.write("Aguardando dados de rastreamento...")
-
-    # Pausar por um intervalo de tempo antes da próxima atualização
-    time.sleep(5)
+    # Pausa por um intervalo de tempo antes da próxima atualização
+    time.sleep(10)
