@@ -12,24 +12,21 @@ import time
 # Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
-# Garantir que os \n na chave privada sejam interpretados corretamente
-private_key = os.getenv("FIREBASE_PRIVATE_KEY").replace("\\n", "\n")
-
-# Carregar credenciais do Firebase a partir das variáveis de ambiente
+# Carregar os segredos do Firebase do ambiente do Streamlit
 firebase_credentials = {
-    "type": os.getenv("FIREBASE_TYPE"),
+    "type": "service_account",
     "project_id": os.getenv("FIREBASE_PROJECT_ID"),
     "private_key_id": os.getenv("FIREBASE_PRIVATE_KEY_ID"),
-    "private_key": private_key,
+    "private_key": os.getenv("FIREBASE_PRIVATE_KEY").replace("\\n", "\n"),
     "client_email": os.getenv("FIREBASE_CLIENT_EMAIL"),
     "client_id": os.getenv("FIREBASE_CLIENT_ID"),
-    "auth_uri": os.getenv("FIREBASE_AUTH_URI"),
-    "token_uri": os.getenv("FIREBASE_TOKEN_URI"),
-    "auth_provider_x509_cert_url": os.getenv("FIREBASE_AUTH_PROVIDER_X509_CERT_URL"),
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
     "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_X509_CERT_URL")
 }
 
-# Inicializar o Firebase
+# Inicializar o Firebase com as credenciais do ambiente
 if not firebase_admin._apps:
     cred = credentials.Certificate(firebase_credentials)
     firebase_admin.initialize_app(cred)
