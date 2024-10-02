@@ -1,7 +1,8 @@
 import streamlit as st
 import requests
 import pandas as pd
-import pydeck as pdk
+import folium
+from streamlit_folium import st_folium
 import time
 
 # Configuração da API do Firestore
@@ -46,28 +47,17 @@ while True:
     data_df = get_tracking_data()
 
     if not data_df.empty:
-        # Mostrar o mapa se houver dados
-        midpoint = (data_df['latitude'].astype(float).mean(), data_df['longitude'].astype(float).mean())
-        
+        # Criar o mapa centrado no primeiro ponto de dados
+        m = folium.Map(location=[data_df['latitude'].iloc[0], data_df['longitude'].iloc[0]], zoom_start=15)
+
+        # Adicionar marcador para cada veículo
+        for index, row in data_df.iterrows():
+            folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(m)
+
         # Atualiza o conteúdo do espaço reservado pelo mapa
         with map_placeholder:
-            st.pydeck_chart(pdk.Deck(
-                initial_view_state=pdk.ViewState(
-                    latitude=midpoint[0],
-                    longitude=midpoint[1],
-                    zoom=14,
-                    pitch=50,
-                ),
-                layers=[
-                    pdk.Layer(
-                        'ScatterplotLayer',
-                        data=data_df,
-                        get_position='[longitude, latitude]',
-                        get_color='[200, 30, 0, 160]',
-                        get_radius=5,
-                    ),
-                ],
-            ))
+            st_data = st_folium(m, width=725)
+
     else:
         st.write("Aguardando dados de rastreamento...")
 
