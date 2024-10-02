@@ -76,4 +76,4 @@ while True:
         st.write("Aguardando dados de rastreamento...")
 
     # Pausar por um intervalo de tempo antes da próxima atualização
-    time.sleep(10)
+    time.sleep(5)
