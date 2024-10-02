@@ -30,7 +30,7 @@ def get_tracking_data():
 # Configuração da página para celular (iPhone 11)
 st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
-st.title("Ceamazon")
+st.title("Mapa de Rastreamento")
 
 # Verificar e inicializar o session state para o mapa
 if 'zoom' not in st.session_state:
@@ -45,7 +45,12 @@ if not data_df.empty:
     # Definir o centro do mapa com base nos dados ou usar o estado atual do centro
     center_lat = data_df['latitude'].iloc[0]
     center_lon = data_df['longitude'].iloc[0]
-    
+
+    # Botão para centralizar no veículo
+    if st.button('Centralizar no Veículo'):
+        st.session_state['center'] = [center_lat, center_lon]
+        st.session_state['zoom'] = 17  # Ajusta o zoom para um nível mais próximo ao veículo
+
     # Criar o mapa centrado no estado atual do mapa ou nos dados
     m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
 
@@ -55,11 +60,12 @@ if not data_df.empty:
 
     # Exibir o mapa e capturar a interação do usuário
     map_output = st_folium(m, width=725, height=500)
-    
-    # Se houver interação do usuário, salvar o novo estado
-    if map_output:
-        st.session_state['center'] = [map_output['center']['lat'], map_output['center']['lng']]
-        st.session_state['zoom'] = map_output['zoom']
+
+    # Se houver interação do usuário, salvar o novo estado, garantindo que as chaves existam
+    if map_output is not None:
+        if 'center' in map_output and 'zoom' in map_output:
+            st.session_state['center'] = [map_output['center']['lat'], map_output['center']['lng']]
+            st.session_state['zoom'] = map_output['zoom']
 
 else:
     st.write("Aguardando dados de rastreamento...")
