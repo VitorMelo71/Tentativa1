@@ -1,11 +1,13 @@
 import streamlit as st
 import requests
 import pandas as pd
-import pydeck as pdk
+import folium
+from streamlit_folium import st_folium
 import time
 
 # Configuração da API do Firestore e do Google Maps
 FIRESTORE_API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
+GOOGLE_MAPS_API_KEY = "AIzaSyAvBYntkiyjBNpU96UdMSoD5cavd3lqQtY"
 PROJECT_ID = "banco-gps"
 COLLECTION = "CoordenadasGPS"
 
@@ -32,7 +34,7 @@ st.set_page_config(page_title="CEAMAZON GPS", layout="centered")
 
 st.title("CEAMAZON GPS - Rastreamento")
 
-# Inicializa o estado do mapa com uma visualização padrão
+# Inicializa o mapa apenas uma vez e mantém a posição e o zoom
 if 'map_initialized' not in st.session_state:
     st.session_state['zoom'] = 15
     st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
@@ -41,56 +43,35 @@ if 'map_initialized' not in st.session_state:
 # Cria um espaço reservado para o mapa
 map_placeholder = st.empty()
 
-# Inicializa a visualização inicial do mapa usando Pydeck
-view_state = pdk.ViewState(
-    latitude=st.session_state['center'][0],
-    longitude=st.session_state['center'][1],
-    zoom=st.session_state['zoom'],
-    pitch=0,
-)
+# Inicializa o mapa usando Google Maps
+m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
+
+# Adiciona o TileLayer do Google Maps
+google_maps_tile = f"https://mt1.google.com/vt/lyrs=r&x={{x}}&y={{y}}&z={{z}}&key={GOOGLE_MAPS_API_KEY}"
+folium.TileLayer(tiles=google_maps_tile, attr="Google Maps", name="Google Maps").add_to(m)
 
 # Exibe o mapa inicialmente
-initial_layer = pdk.Layer(
-    "ScatterplotLayer",
-    data=pd.DataFrame([]),  # Inicialmente vazio
-    get_position='[longitude, latitude]',
-    get_color='[200, 30, 0, 160]',
-    get_radius=200,
-)
+with map_placeholder:
+    st_folium(m, width=725, height=500)
 
-deck = pdk.Deck(
-    layers=[initial_layer],
-    initial_view_state=view_state,
-    map_style="mapbox://styles/mapbox/streets-v11"
-)
-
-# Renderiza o mapa
-map_placeholder.pydeck_chart(deck)
-
-# Atualiza apenas os pontos de localização sem recarregar o mapa inteiro
+# Atualiza apenas os pontos de localização no mapa sem recarregar a página inteira
 while True:
     # Carregar dados do Firestore
     data_df = get_tracking_data()
 
     if not data_df.empty:
-        # Criar a camada de pontos atualizada
-        layer = pdk.Layer(
-            "ScatterplotLayer",
-            data=data_df,
-            get_position='[longitude, latitude]',
-            get_color='[200, 30, 0, 160]',
-            get_radius=200,
-        )
+        # Criar um novo mapa apenas com os marcadores atualizados
+        marker_map = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles=None)
+        google_maps_tile = f"https://mt1.google.com/vt/lyrs=r&x={{x}}&y={{y}}&z={{z}}&key={GOOGLE_MAPS_API_KEY}"
+        folium.TileLayer(tiles=google_maps_tile, attr="Google Maps", name="Google Maps").add_to(marker_map)
 
-        # Atualizar o mapa com a nova camada, mantendo a visualização
-        deck = pdk.Deck(
-            layers=[layer],
-            initial_view_state=view_state,
-            map_style="mapbox://styles/mapbox/streets-v11"
-        )
+        # Adicionar marcadores
+        for index, row in data_df.iterrows():
+            folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(marker_map)
 
-        # Renderizar o mapa atualizado
-        map_placeholder.pydeck_chart(deck)
-
-    # Pausar por um intervalo de tempo antes da próxima atualização
+        # Atualizar o mapa no espaço reservado sem recriar o mapa inteiro
+        with map_placeholder:
+            st_folium(marker_map, width=725, height=500)
+    
+    # Pausa por um intervalo de tempo antes da próxima atualização
     time.sleep(10)
