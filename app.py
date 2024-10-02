@@ -40,7 +40,7 @@ if 'map_initialized' not in st.session_state:
     st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
     st.session_state['map_initialized'] = True
 
-# Cria um espaço reservado para o mapa
+# Cria um espaço reservado para o mapa e um para os marcadores
 map_placeholder = st.empty()
 
 # Inicializa o mapa usando Google Maps
@@ -54,19 +54,24 @@ folium.TileLayer(tiles=google_maps_tile, attr="Google Maps", name="Google Maps")
 with map_placeholder:
     st_folium(m, width=725, height=500)
 
-# Atualiza o ponto de localização no mapa sem recarregar a página
+# Atualiza apenas os pontos de localização no mapa sem recarregar a página inteira
 while True:
     # Carregar dados do Firestore
     data_df = get_tracking_data()
 
     if not data_df.empty:
-        # Limpa os marcadores anteriores e insere novos marcadores com base na nova localização
+        # Criar um novo mapa apenas com os marcadores atualizados
+        marker_map = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles=None)
+        google_maps_tile = f"https://mt1.google.com/vt/lyrs=r&x={{x}}&y={{y}}&z={{z}}&key={GOOGLE_MAPS_API_KEY}"
+        folium.TileLayer(tiles=google_maps_tile, attr="Google Maps", name="Google Maps").add_to(marker_map)
+
+        # Adicionar marcadores
         for index, row in data_df.iterrows():
-            folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(m)
+            folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(marker_map)
 
-        # Atualiza o mapa no espaço reservado sem recriá-lo
+        # Atualizar o mapa no espaço reservado sem recriar o mapa inteiro
         with map_placeholder:
-            st_folium(m, width=725, height=500)
-
+            st_folium(marker_map, width=725, height=500)
+    
     # Pausa por um intervalo de tempo antes da próxima atualização
     time.sleep(10)
