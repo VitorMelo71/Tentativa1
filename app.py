@@ -3,6 +3,14 @@ import json
 import firebase_admin
 from firebase_admin import credentials
 
+# Verificar se o segredo está sendo carregado
+firebase_credentials_str = os.getenv("FIREBASE_CREDENTIALS")
+
+if firebase_credentials_str is None:
+    st.error("O segredo FIREBASE_CREDENTIALS não está carregado.")
+else:
+    st.write("Segredo FIREBASE_CREDENTIALS carregado com sucesso.")
+    
 # Recuperar o conteúdo dos segredos do GitHub
 firebase_credentials_str = os.getenv("FIREBASE_CREDENTIALS")
 
