@@ -64,7 +64,7 @@ while True:
                         data=data_df,
                         get_position='[longitude, latitude]',
                         get_color='[200, 30, 0, 160]',
-                        get_radius=200,
+                        get_radius=50,
                     ),
                 ],
             ))
