@@ -1,59 +1,55 @@
 import streamlit as st
-import os
-import json
-import firebase_admin
-from firebase_admin import credentials
 import folium
 from streamlit_folium import st_folium
-from streamlit.runtime.scriptrunner import RerunException
-from streamlit.runtime.state.session_state import SessionState
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-# Função para inicializar Firebase
+# Configurar a chave de API do Firebase (NÃO RECOMENDADO para produção)
+API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
+
+# Configurar o Firebase usando a chave de API
 def initialize_firebase():
-    # Carregar o conteúdo das credenciais do Firebase
-    firebase_credentials_str = os.getenv("FIREBASE_CREDENTIALS")
-    
-    if firebase_credentials_str is None:
-        st.error("O segredo FIREBASE_CREDENTIALS não está carregado.")
-    else:
-        try:
-            # Carregar as credenciais como JSON
-            firebase_credentials = json.loads(firebase_credentials_str)
-            st.write("Credenciais do Firebase carregadas com sucesso.")
-            
-            # Inicializar o Firebase com as credenciais carregadas em formato de dicionário
-            cred = credentials.Certificate(firebase_credentials)
-            firebase_admin.initialize_app(cred)
-        except json.JSONDecodeError as e:
-            st.error(f"Erro ao decodificar as credenciais JSON: {e}")
-        except Exception as e:
-            st.error(f"Erro inesperado: {e}")
+    if not firebase_admin._apps:
+        cred = credentials.Certificate({
+            "type": "service_account",
+            "project_id": "<your_project_id>",
+            "private_key_id": "<private_key_id>",
+            "private_key": "<private_key>",
+            "client_email": "<client_email>",
+            "client_id": "<client_id>",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-x0vc4%40banco-gps.iam.gserviceaccount.com"
+        })
+        firebase_admin.initialize_app(cred)
 
-# Função para criar o mapa
-def criar_mapa(lat, lon, zoom):
-    mapa = folium.Map(location=[lat, lon], zoom_start=zoom, control_scale=True)
-    folium.Marker([lat, lon], tooltip="Você está aqui!").add_to(mapa)
-    return mapa
+initialize_firebase()
 
-# Inicializar o Firebase
-if "firebase_initialized" not in st.session_state:
-    initialize_firebase()
-    st.session_state.firebase_initialized = True
+# Conectar ao Firestore
+db = firestore.client()
 
-# Configuração inicial do mapa
-if 'lat' not in st.session_state:
-    st.session_state.lat = -1.2921  # Latitude padrão (exemplo: Nairobi)
-if 'lon' not in st.session_state:
-    st.session_state.lon = 36.8219  # Longitude padrão
-if 'zoom' not in st.session_state:
-    st.session_state.zoom = 10  # Nível de zoom padrão
+# Função para criar o mapa no formato responsivo para celular
+def create_map():
+    m = folium.Map(location=[-15.7801, -47.9292], zoom_start=12)
 
-# Mostrar o mapa
-mapa = criar_mapa(st.session_state.lat, st.session_state.lon, st.session_state.zoom)
-mapa_data = st_folium(mapa, width=350, height=500)
+    # Se o usuário mover o mapa, mantemos a última posição
+    st_map = st_folium(m, width=500, height=700)
+    return st_map
 
-# Verificar se o usuário movimentou o mapa e atualizar as coordenadas e zoom
-if mapa_data and mapa_data['last_center']:
-    st.session_state.lat = mapa_data['last_center'][0]
-    st.session_state.lon = mapa_data['last_center'][1]
-    st.session_state.zoom = mapa_data['last_zoom']
+st.title("Firebase Firestore & Map Example")
+
+# Exemplo de leitura de dados do Firestore
+def read_from_firestore():
+    users_ref = db.collection(u'users')
+    docs = users_ref.stream()
+
+    for doc in docs:
+        st.write(f'{doc.id} => {doc.to_dict()}')
+
+# Mostra o mapa no app
+st_map = create_map()
+
+# Exemplo de leitura de dados do Firestore
+if st.button("Carregar dados do Firestore"):
+    read_from_firestore()
