@@ -12,11 +12,6 @@ import time
 # Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
-# Verifique se as variáveis de ambiente estão sendo carregadas corretamente
-st.write("FIREBASE_PRIVATE_KEY:", os.getenv("FIREBASE_PRIVATE_KEY"))
-st.write("FIREBASE_PROJECT_ID:", os.getenv("FIREBASE_PROJECT_ID"))
-st.write("FIREBASE_CLIENT_EMAIL:", os.getenv("FIREBASE_CLIENT_EMAIL"))
-
 # Carregar as credenciais do Firebase a partir das variáveis de ambiente
 firebase_credentials = {
     "type": os.getenv("FIREBASE_TYPE"),
