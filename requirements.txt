@@ -4,3 +4,4 @@ pandas
 pydeck
 folium
 streamlit_folium
+streamlit-autorefresh
