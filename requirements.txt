@@ -5,3 +5,4 @@ pydeck
 folium
 streamlit_folium
 streamlit-autorefresh
+firebase_admin
