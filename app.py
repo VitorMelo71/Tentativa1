@@ -30,7 +30,7 @@ def get_tracking_data():
 # Configuração da página
 st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
-st.title("Mapa de Rastreamento")
+st.title("CEAMAZON")
 
 # Inicializa o mapa uma única vez
 if 'map_initialized' not in st.session_state:
@@ -56,7 +56,7 @@ while True:
             data=data_df,
             get_position='[longitude, latitude]',
             get_color='[200, 30, 0, 160]',
-            get_radius=200,
+            get_radius=20,
         )
 
         # Configurar a visualização inicial
