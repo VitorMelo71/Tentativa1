@@ -60,7 +60,7 @@ map_placeholder = st.empty()
 
 # Exibir o mapa inicialmente
 with map_placeholder:
-    folium_static(st.session_state['map'], width=725, height=500)
+    folium_static(st.session_state['map'], width=1000, height=1000)
 
 # Atualiza a localização do veículo a cada 1 segundo
 while True:
@@ -68,6 +68,6 @@ while True:
 
     # Atualiza o mapa no Streamlit sem recriar todo o mapa
     with map_placeholder:
-        folium_static(st.session_state['map'], width=725, height=500)
+        folium_static(st.session_state['map'], width=1000, height=1000)
 
     time.sleep(1)
