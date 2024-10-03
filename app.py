@@ -1,9 +1,8 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import requests
-import folium
-from streamlit_folium import st_folium
 import time
+from streamlit_folium import st_folium
+import folium
 
 # Configuração da API do Firestore
 FIRESTORE_API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
@@ -28,38 +27,39 @@ def get_tracking_data():
             })
     return records
 
-# Função para renderizar o mapa
-def render_map(lat, lon):
-    # Cria o mapa centrado nas coordenadas fornecidas
-    folium_map = folium.Map(location=[lat, lon], zoom_start=15)
-    
-    # Adiciona o marcador no mapa
-    folium.Marker([lat, lon], tooltip="Localização do Veículo").add_to(folium_map)
-    
-    return folium_map
+# Inicializa a página do Streamlit
+st.set_page_config(page_title="CEAMAZON GPS - Rastreamento", layout="centered")
+st.title("CEAMAZON GPS - Rastreamento")
 
-# Pega a posição inicial para renderizar o mapa
+# Obter dados iniciais
 data = get_tracking_data()
 if data:
     latest_data = data[0]
     lat = latest_data['latitude']
     lon = latest_data['longitude']
 
-    # Renderiza o mapa inicial
-    folium_map = render_map(lat, lon)
-    map_placeholder = st_folium(folium_map, width=725, height=500)
+    # Criar o mapa inicial com folium
+    map_folium = folium.Map(location=[lat, lon], zoom_start=15)
+    vehicle_marker = folium.Marker(location=[lat, lon], popup="Veículo", icon=folium.Icon(color="blue"))
+    vehicle_marker.add_to(map_folium)
 
-# Atualiza a posição do veículo a cada 10 segundos
-while True:
-    data = get_tracking_data()
-    if data:
-        latest_data = data[0]
-        lat = latest_data['latitude']
-        lon = latest_data['longitude']
-        
-        # Renderiza o mapa atualizado com o marcador movido
-        folium_map = render_map(lat, lon)
-        map_placeholder = st_folium(folium_map, width=725, height=500)
-    
-    # Aguarda 10 segundos antes da próxima atualização
-    time.sleep(5)
+    # Placeholder do mapa no Streamlit
+    map_placeholder = st.empty()
+    map_placeholder_folium = st_folium(map_folium, height=500)
+
+    # Atualiza a posição do veículo a cada 10 segundos sem recarregar o mapa
+    while True:
+        data = get_tracking_data()
+        if data:
+            latest_data = data[0]
+            new_lat = latest_data['latitude']
+            new_lon = latest_data['longitude']
+
+            # Atualiza o marcador com a nova posição
+            map_folium.location = [new_lat, new_lon]
+            vehicle_marker.location = [new_lat, new_lon]
+
+            # Atualiza o mapa com o novo local do veículo
+            map_placeholder_folium = st_folium(map_folium, height=500)
+
+        time.sleep(10)
