@@ -11,7 +11,7 @@ COLLECTION = "CoordenadasGPS"
 FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/{COLLECTION}?key={FIRESTORE_API_KEY}"
 
 # URL para o ícone personalizado (sa.jpg)
-BUS_ICON_URL = "https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg"
+BUS_ICON_URL = "https://github.com/VitorMelo71/Tentativa1/blob/main/sa.png"
 
 # Função para buscar dados do Firestore via API REST
 def get_tracking_data():
