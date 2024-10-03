@@ -61,6 +61,9 @@ def update_vehicle_location():
         # Atualiza o marcador para a nova posição sem recriar o mapa
         st.session_state['vehicle_marker'].location = [new_lat, new_lon]
 
+        # Atualiza o centro do mapa para acompanhar o veículo, mas mantém o zoom
+        st.session_state['map'].location = [new_lat, new_lon]
+
 # Cria um espaço reservado para o mapa e exibe-o
 map_placeholder = st.empty()
 
