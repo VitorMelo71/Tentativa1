@@ -34,16 +34,8 @@ st.set_page_config(page_title="Mapa de Rastreamento - OpenStreetMap", layout="ce
 # Carregar a imagem do logotipo
 st.image("https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg", use_column_width=True)
 
-# Caixa de ferramentas com botão para ajustar resolução
-st.markdown("### Caixa de ferramentas")
-with st.expander("Ajustes de Resolução do Mapa"):
-    ajusta_resolucao = st.radio("Escolha a resolução do mapa:", ('Padrão', 'Resolução para Celular'))
-
 # Define o tamanho do mapa com base na escolha do usuário
-if ajusta_resolucao == 'Resolução para Celular':
-    map_width, map_height = 350, 450  # Tamanho ajustado para dispositivos móveis
-else:
-    map_width, map_height = 1000, 800  # Tamanho ajustado para computadores
+map_width, map_height = 1000, 800
 
 # Inicializa o mapa uma única vez
 if 'map_initialized' not in st.session_state:
@@ -66,22 +58,11 @@ def update_vehicle_location():
         new_lat = data_df['latitude'].iloc[0]
         new_lon = data_df['longitude'].iloc[0]
 
-        # Atualiza o marcador para a nova posição
+        # Atualiza o marcador para a nova posição sem recriar o mapa
         st.session_state['vehicle_marker'].location = [new_lat, new_lon]
 
 # Cria um espaço reservado para o mapa e exibe-o
 map_placeholder = st.empty()
-
-# Função para atualizar o mapa mantendo o zoom e a posição
-def update_map():
-    # Mantém o estado atual do zoom e do centro do mapa
-    bounds = st.session_state['map'].get_bounds()
-    st.session_state['center'] = [(bounds[0][0] + bounds[1][0]) / 2, (bounds[0][1] + bounds[1][1]) / 2]
-    st.session_state['zoom'] = st.session_state['map']._zoom
-
-    # Recria o mapa com a nova posição e zoom
-    st.session_state['map'] = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
-    st.session_state['vehicle_marker'].add_to(st.session_state['map'])
 
 # Exibir o mapa inicialmente
 with map_placeholder:
@@ -90,9 +71,6 @@ with map_placeholder:
 # Atualiza a localização do veículo a cada 1 segundo
 while True:
     update_vehicle_location()
-
-    # Atualiza o mapa no Streamlit mantendo o estado do zoom e centro do mapa
-    update_map()
 
     # Atualiza o mapa no Streamlit sem recriar todo o mapa
     with map_placeholder:
