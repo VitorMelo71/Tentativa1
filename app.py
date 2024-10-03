@@ -34,9 +34,9 @@ st.set_page_config(page_title="CEAMAZON GPS - Rastreamento", layout="centered")
 
 st.title("CEAMAZON GPS - Rastreamento")
 
-# Inicializa o mapa do Google Maps apenas uma vez
-def render_map(lat, lon):
-    components.html(f"""
+# Função para renderizar o mapa
+def render_map(lat, lon, centralize=False):
+    map_code = f"""
         <html>
           <head>
             <script src="https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}"></script>
@@ -58,21 +58,24 @@ def render_map(lat, lon):
                 }});
               }}
 
-              window.updateMarker = function(lat, lon) {{
+              function updateMarker(lat, lon) {{
                 var newPosition = new google.maps.LatLng(lat, lon);
                 marker.setPosition(newPosition);
-              }};
+                if ({'true' if centralize else 'false'}) {{
+                    map.setCenter(newPosition);
+                }}
+              }}
 
-              window.centerMap = function(lat, lon) {{
-                map.setCenter(new google.maps.LatLng(lat, lon));
-              }};
+              window.initMap = initMap;
+              window.updateMarker = updateMarker;
             </script>
           </head>
           <body onload="initMap()">
             <div id="map" style="width: 100%; height: 500px;"></div>
           </body>
         </html>
-    """, height=500)
+    """
+    components.html(map_code, height=500)
 
 # Pega a posição inicial para renderizar o mapa
 data = get_tracking_data()
@@ -86,18 +89,14 @@ if st.button("Centralizar no veículo"):
     if data:
         latest_data = data[0]
         # Centraliza o mapa na posição atual do veículo
-        components.html(f"""
-            <script>
-                centerMap({latest_data['latitude']}, {latest_data['longitude']});
-            </script>
-        """, height=0)
+        render_map(latest_data['latitude'], latest_data['longitude'], centralize=True)
 
-# Atualiza a posição do veículo a cada 10 segundos
+# Atualiza a posição do veículo a cada 10 segundos sem recarregar o mapa
 while True:
     data = get_tracking_data()
     if data:
         latest_data = data[0]
-        # Atualiza o marcador sem recarregar o mapa
+        # Atualiza apenas o marcador
         components.html(f"""
             <script>
                 updateMarker({latest_data['latitude']}, {latest_data['longitude']});
