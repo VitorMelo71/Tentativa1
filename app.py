@@ -30,36 +30,36 @@ def get_tracking_data():
 # Configuração da página para celular (iPhone 11)
 st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
-st.title("Mapa de Rastreamento - OpenStreetMap")
+st.title("Mapa de Rastreamento")
 
-# Inicializa o mapa apenas uma vez e mantém a posição e o zoom
-if 'map_initialized' not in st.session_state:
-    st.session_state['zoom'] = 15
+# Verificar e inicializar o session state para o mapa
+if 'zoom' not in st.session_state:
+    st.session_state['zoom'] = 15  # Zoom padrão
+if 'center' not in st.session_state:
     st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
-    st.session_state['map_initialized'] = True
 
-# Cria um espaço reservado para o mapa
-map_placeholder = st.empty()
+# Carregar dados do Firestore
+data_df = get_tracking_data()
 
-# Função para atualizar o mapa
-def update_map():
-    # Carregar dados do Firestore
-    data_df = get_tracking_data()
+if not data_df.empty:
+    # Definir o centro do mapa com base nos dados ou usar o estado atual do centro
+    center_lat = data_df['latitude'].iloc[0]
+    center_lon = data_df['longitude'].iloc[0]
+    
+    # Criar o mapa centrado no estado atual do mapa ou nos dados
+    m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
 
-    # Inicializa o mapa
-    m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
+    # Adicionar marcador para cada veículo
+    for index, row in data_df.iterrows():
+        folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(m)
 
-    if not data_df.empty:
-        # Insere novos marcadores com base na nova localização
-        for index, row in data_df.iterrows():
-            folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(m)
+    # Exibir o mapa e capturar a interação do usuário
+    map_output = st_folium(m, width=725, height=500)
+    
+    # Se houver interação do usuário, salvar o novo estado
+    if map_output:
+        st.session_state['center'] = [map_output['center']['lat'], map_output['center']['lng']]
+        st.session_state['zoom'] = map_output['zoom']
 
-    # Exibe o mapa
-    with map_placeholder:
-        st_folium(m, width=725, height=500)
-
-# Atualiza o mapa a cada 10 segundos sem bloquear o fluxo da aplicação
-st_autorefresh(interval=10 * 1000, limit=None, key="autorefresh")
-
-# Chama a função de atualização do mapa
-update_map()
+else:
+    st.write("Aguardando dados de rastreamento...")
