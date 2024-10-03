@@ -1,57 +1,80 @@
+import streamlit.components.v1 as components
 import streamlit as st
-from google.cloud import firestore
-import firebase_admin
-from firebase_admin import credentials, firestore
+import requests
 import time
 
-# Chaves de API
+# Configuração da API do Firestore e Google Maps
 FIRESTORE_API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
 GOOGLE_MAPS_API_KEY = "AIzaSyBJg0w7kTJ2tNWuEeeKgMPSqe97lrFel1w"
+PROJECT_ID = "banco-gps"
+COLLECTION = "CoordenadasGPS"
+FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/{COLLECTION}?key={FIRESTORE_API_KEY}"
 
-# Inicializando o Firebase
-if not firebase_admin._apps:
-    cred = credentials.Certificate("banco-gps-firebase-adminsdk.json")
-    firebase_admin.initialize_app(cred)
+# Função para buscar dados do Firestore via API REST
+def get_tracking_data():
+    response = requests.get(FIRESTORE_URL)
+    data = response.json()
 
-# Inicializando Firestore
-db = firestore.client()
+    records = []
+    if 'documents' in data:
+        for doc in data['documents']:
+            fields = doc['fields']
+            latitude = float(fields['latitude']['stringValue'])
+            longitude = float(fields['longitude']['stringValue'])
+            status = fields['status']['stringValue']
+            records.append({
+                'latitude': latitude,
+                'longitude': longitude,
+                'status': status
+            })
+    return records
 
-# Função para obter a localização do banco de dados Firestore
-def get_vehicle_location():
-    doc_ref = db.collection('CoordenadasGPS').document('veiculo')
-    doc = doc_ref.get()
-    if doc.exists:
-        data = doc.to_dict()
-        return float(data['latitude']), float(data['longitude'])
-    else:
-        st.error("Dados de localização não encontrados!")
-        return None, None
+# Configuração da página para celular
+st.set_page_config(page_title="CEAMAZON GPS - Rastreamento", layout="centered")
 
-# Função para criar o mapa do Google
-def create_google_map(lat, lon):
-    map_html = f'''
-    <iframe width="100%" height="500" frameborder="0" style="border:0"
-    src="https://www.google.com/maps/embed/v1/place?key={GOOGLE_MAPS_API_KEY}&q={lat},{lon}&zoom=15" allowfullscreen>
-    </iframe>
-    '''
-    return map_html
+st.title("CEAMAZON GPS - Rastreamento")
 
-# Renderiza o mapa uma única vez
-lat, lon = get_vehicle_location()
-if lat is not None and lon is not None:
-    if "map_created" not in st.session_state:
-        st.session_state["map_created"] = True
-        st.markdown(create_google_map(lat, lon), unsafe_allow_html=True)
+# Inicializa o mapa do Google Maps
+def render_map(lat, lon):
+    components.html(f"""
+        <html>
+          <head>
+            <script src="https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}"></script>
+            <script>
+              function initMap() {{
+                var mapOptions = {{
+                  center: new google.maps.LatLng({lat}, {lon}),
+                  zoom: 15,
+                  mapTypeId: google.maps.MapTypeId.ROADMAP
+                }};
+                var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+                var marker = new google.maps.Marker({{
+                  position: new google.maps.LatLng({lat}, {lon}),
+                  map: map,
+                  title: "Localização do Veículo"
+                }});
+              }}
+            </script>
+          </head>
+          <body onload="initMap()">
+            <div id="map" style="width: 100%; height: 500px;"></div>
+          </body>
+        </html>
+    """, height=500)
 
-# Função para atualizar apenas a localização do veículo
-def update_vehicle_marker():
-    while True:
-        lat, lon = get_vehicle_location()
-        if lat is not None and lon is not None:
-            # Apenas o marcador será atualizado
-            st.session_state["map_created"] = False  # Não recria o mapa
-            st.markdown(create_google_map(lat, lon), unsafe_allow_html=True)
-        time.sleep(10)  # Atualiza a cada 10 segundos
+# Atualiza a localização no mapa
+data = get_tracking_data()
 
-# Rodando a atualização da posição em loop
-update_vehicle_marker()
+if data:
+    latest_data = data[0]
+    render_map(latest_data['latitude'], latest_data['longitude'])
+else:
+    st.write("Aguardando dados de rastreamento...")
+
+# Pausa para atualizar o ponto a cada 10 segundos
+while True:
+    data = get_tracking_data()
+    if data:
+        latest_data = data[0]
+        render_map(latest_data['latitude'], latest_data['longitude'])
+    time.sleep(10)
