@@ -31,7 +31,7 @@ def get_tracking_data():
 # Configuração da página
 st.set_page_config(page_title="Mapa de Rastreamento", layout="centered")
 
-st.title("Mapa de Rastreamento - OpenStreetMap")
+st.title("CEAMAZON - GPS")
 
 # Inicializa o mapa uma única vez
 if 'map' not in st.session_state:
@@ -69,4 +69,4 @@ if map_data and 'bounds' in map_data:
 # Atualiza a localização do veículo a cada 10 segundos
 while True:
     update_vehicle_location()
-    time.sleep(10)
+    time.sleep(5)
