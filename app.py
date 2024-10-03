@@ -1,8 +1,8 @@
 import streamlit as st
 import requests
 import pandas as pd
-import folium
-from streamlit_folium import st_folium
+import pydeck as pdk
+import time
 
 # Configuração da API do Firestore
 API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
@@ -27,39 +27,53 @@ def get_tracking_data():
             })
     return pd.DataFrame(records)
 
-# Configuração da página para celular (iPhone 11)
+# Configuração da página
 st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
 st.title("Mapa de Rastreamento")
 
-# Verificar e inicializar o session state para o mapa
-if 'zoom' not in st.session_state:
-    st.session_state['zoom'] = 15  # Zoom padrão
-if 'center' not in st.session_state:
+# Inicializa o mapa uma única vez
+if 'map_initialized' not in st.session_state:
+    st.session_state['map_initialized'] = True
+    st.session_state['zoom'] = 15
     st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
 
-# Carregar dados do Firestore
-data_df = get_tracking_data()
+# Cria um espaço reservado para o mapa
+map_placeholder = st.empty()
 
-if not data_df.empty:
-    # Definir o centro do mapa com base nos dados ou usar o estado atual do centro
-    center_lat = data_df['latitude'].iloc[0]
-    center_lon = data_df['longitude'].iloc[0]
-    
-    # Criar o mapa centrado no estado atual do mapa ou nos dados
-    m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
+# Exibir o mapa inicialmente
+while True:
+    # Carregar dados do Firestore
+    data_df = get_tracking_data()
 
-    # Adicionar marcador para cada veículo
-    for index, row in data_df.iterrows():
-        folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(m)
+    if not data_df.empty:
+        # Definir o centro do mapa baseado no primeiro ponto de dados
+        st.session_state['center'] = [data_df['latitude'].iloc[0], data_df['longitude'].iloc[0]]
 
-    # Exibir o mapa e capturar a interação do usuário
-    map_output = st_folium(m, width=725, height=500)
-    
-    # Se houver interação do usuário, salvar o novo estado
-    if map_output:
-        st.session_state['center'] = [map_output['center']['lat'], map_output['center']['lng']]
-        st.session_state['zoom'] = map_output['zoom']
+        # Criar a camada de pontos (veículos)
+        layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=data_df,
+            get_position='[longitude, latitude]',
+            get_color='[200, 30, 0, 160]',
+            get_radius=200,
+        )
 
-else:
-    st.write("Aguardando dados de rastreamento...")
+        # Configurar a visualização inicial
+        view_state = pdk.ViewState(
+            latitude=st.session_state['center'][0],
+            longitude=st.session_state['center'][1],
+            zoom=st.session_state['zoom'],
+            pitch=50,
+        )
+
+        # Renderizar o mapa apenas uma vez, atualizando os pontos
+        with map_placeholder:
+            r = pdk.Deck(layers=[layer], initial_view_state=view_state)
+            st.pydeck_chart(r)
+
+    else:
+        st.write("Aguardando dados de rastreamento...")
+
+    # Pausar por um intervalo de tempo antes da próxima atualização
+    time.sleep(10)
