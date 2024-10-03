@@ -3,13 +3,11 @@ import requests
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
-import time
 
 # Configuração da API do Firestore
 API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
 PROJECT_ID = "banco-gps"
 COLLECTION = "CoordenadasGPS"
-
 FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/{COLLECTION}?key={API_KEY}"
 
 # Função para buscar dados do Firestore via API REST
@@ -33,35 +31,38 @@ st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
 st.title("Mapa de Rastreamento - OpenStreetMap")
 
-# Inicializa o mapa apenas uma vez
-if 'map_initialized' not in st.session_state:
+# Inicializa o mapa uma única vez
+if 'map' not in st.session_state:
     st.session_state['zoom'] = 15
     st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
-    st.session_state['map_initialized'] = True
     # Criação inicial do mapa
     st.session_state['map'] = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
+    # Adiciona um marcador inicial
+    st.session_state['vehicle_marker'] = folium.Marker(location=st.session_state['center'], popup="Veículo")
+    st.session_state['vehicle_marker'].add_to(st.session_state['map'])
 
-# Cria um espaço reservado para o mapa
-map_placeholder = st.empty()
-
-# Função para atualizar o mapa
-def update_map():
-    # Carregar dados do Firestore
+# Função para atualizar a posição do veículo
+def update_vehicle_location():
     data_df = get_tracking_data()
 
     if not data_df.empty:
-        # Atualiza o ponto de localização no mapa sem recarregar a página
-        for index, row in data_df.iterrows():
-            folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(st.session_state['map'])
+        # Obtém a última posição do veículo
+        latest_data = data_df.iloc[0]
+        new_lat = latest_data['latitude']
+        new_lon = latest_data['longitude']
 
-    # Exibe o mapa no espaço reservado
-    with map_placeholder:
-        st_folium(st.session_state['map'], width=725, height=500)
+        # Atualiza a posição do marcador do veículo
+        st.session_state['vehicle_marker'].location = [new_lat, new_lon]
+        
+        # Exibe o mapa atualizado
+        map_placeholder = st_folium(st.session_state['map'], width=725, height=500)
+    else:
+        st.write("Aguardando dados de rastreamento...")
 
-# Chama a função de atualização uma vez
-update_map()
+# Exibe o mapa uma vez
+map_placeholder = st_folium(st.session_state['map'], width=725, height=500)
 
-# Pausar por um intervalo de tempo antes da próxima atualização
+# Atualiza a localização do veículo a cada 10 segundos sem recarregar o mapa
 while True:
-    time.sleep(10)
-    update_map()
+    update_vehicle_location()
+    time.sleep(5)
