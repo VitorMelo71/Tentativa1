@@ -42,48 +42,50 @@ if data:
 
     # Inicializa o mapa do Google Maps com JavaScript
     map_html = f"""
-    <html>
-      <head>
-        <script src="https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}"></script>
-        <script>
-          var marker;
-          var map;
+<html>
+  <head>
+    <script src="https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}"></script>
+    <script>
+      var marker;
+      var map;
 
-          function initMap() {{
-            var mapOptions = {{
-              center: new google.maps.LatLng({lat}, {lon}),
-              zoom: 15,
-              mapTypeId: google.maps.MapTypeId.ROADMAP
-            }};
-            map = new google.maps.Map(document.getElementById("map"), mapOptions);
-            marker = new google.maps.Marker({{
-              position: new google.maps.LatLng({lat}, {lon}),
-              map: map,
-              title: "Localização do Veículo"
-            }});
-          }}
+      function initMap() {{
+        var mapOptions = {{
+          center: new google.maps.LatLng({lat}, {lon}),
+          zoom: 15,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        }};
+        map = new google.maps.Map(document.getElementById("map"),   
+ mapOptions);
+        marker = new google.maps.Marker({{
+          position: new google.maps.LatLng({lat}, {lon}),
+          map: map,   
 
-          function updateMarker(lat, lon) {{
-            var newPosition = new google.maps.LatLng(lat, lon);
-            marker.setPosition(newPosition);
-            map.setCenter(newPosition);
-          }}
+          title: "Localização do Veículo"
+        }});
+      }}
 
-          // Função que atualiza a cada 10 segundos o marcador do Firebase
-          setInterval(function() {{
-              fetch("/get_location_data").then(response => response.json()).then(data => {{
-                var newLat = data.latitude;
-                var newLon = data.longitude;
-                updateMarker(newLat, newLon);
-              }});
-          }}, 10000); // Atualiza a cada 10 segundos
-        </script>
-      </head>
-      <body onload="initMap();">
-        <div id="map" style="width: 100%; height: 500px;"></div>
-      </body>
-    </html>
-    """
+      function updateMarker(lat, lon) {{
+        var newPosition = new google.maps.LatLng(lat, lon);
+        marker.setPosition(newPosition);
+        map.setCenter(newPosition);
+      }}
+
+      // Função que atualiza a cada 1 SEGUNDO o marcador do Firebase
+      setInterval(function() {{
+        fetch("/get_location_data").then(response => response.json()).then(data => {{
+          var newLat = data.latitude;
+          var newLon = data.longitude;
+          updateMarker(newLat, newLon);
+        }});
+      }}, 1000); // Atualiza a cada 1 segundo
+    </script>
+  </head>
+  <body onload="initMap();">
+    <div id="map" style="width: 100%; height: 500px;"></div>
+  </body>
+</html>
+"""
 
     # Exibe o mapa no componente Streamlit
     components.html(map_html, height=500)
