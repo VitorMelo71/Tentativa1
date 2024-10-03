@@ -69,4 +69,4 @@ if map_data and 'bounds' in map_data:
 # Atualiza a localização do veículo a cada 10 segundos
 while True:
     update_vehicle_location()
-    time.sleep(10)
+    time.sleep(3)
