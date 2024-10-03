@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
+import time
 
 # Configuração da API do Firestore
 API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
@@ -29,7 +30,7 @@ def get_tracking_data():
 # Configuração da página
 st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
-st.title("Mapa de Rastreamento - OpenStreetMap")
+st.title("CEAMAZON GPS")
 
 # Inicializa o mapa uma única vez
 if 'map' not in st.session_state:
@@ -51,18 +52,21 @@ def update_vehicle_location():
         new_lat = latest_data['latitude']
         new_lon = latest_data['longitude']
 
-        # Atualiza a posição do marcador do veículo
-        st.session_state['vehicle_marker'].location = [new_lat, new_lon]
-        
-        # Exibe o mapa atualizado
-        map_placeholder = st_folium(st.session_state['map'], width=725, height=500)
+        # Remove o marcador anterior
+        st.session_state['map'] = folium.Map(location=[new_lat, new_lon], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
+        # Adiciona o novo marcador
+        folium.Marker(location=[new_lat, new_lon], popup="Veículo").add_to(st.session_state['map'])
+
+        # Renderiza o mapa atualizado
+        st_folium(st.session_state['map'], width=725, height=500)
+
     else:
         st.write("Aguardando dados de rastreamento...")
 
 # Exibe o mapa uma vez
-map_placeholder = st_folium(st.session_state['map'], width=725, height=500)
+st_folium(st.session_state['map'], width=725, height=500)
 
-# Atualiza a localização do veículo a cada 10 segundos sem recarregar o mapa
+# Atualiza a localização do veículo a cada 10 segundos
 while True:
     update_vehicle_location()
     time.sleep(5)
