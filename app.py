@@ -30,14 +30,13 @@ def get_tracking_data():
 # Configuração da página
 st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
-st.title("CEAMAZON - GPS")
+st.title("Mapa de Rastreamento - OpenStreetMap")
 
 # Inicializa o mapa uma única vez
-if 'map_initialized' not in st.session_state:
+if 'map' not in st.session_state:
     st.session_state['zoom'] = 15
     st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
-    st.session_state['map_initialized'] = True
-
+    
     # Criação inicial do mapa
     m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
     
@@ -45,8 +44,8 @@ if 'map_initialized' not in st.session_state:
     st.session_state['vehicle_marker'] = folium.Marker(location=st.session_state['center'], popup="Veículo")
     st.session_state['vehicle_marker'].add_to(m)
 
-    # Renderiza o mapa apenas uma vez
-    st.session_state['map_rendered'] = st_folium(m, width=725, height=500)
+    # Renderiza o mapa e salva no estado
+    st.session_state['map'] = st_folium(m, width=725, height=500)
 
 # Função para atualizar a posição do veículo
 def update_vehicle_location():
@@ -60,10 +59,10 @@ def update_vehicle_location():
 
         # Atualiza a posição do marcador
         st.session_state['vehicle_marker'].location = [new_lat, new_lon]
-
-        # Atualiza apenas o marcador no mapa sem recriar o componente
-        st.session_state['map_rendered']
-
+        
+        # Renderiza o mapa com a nova posição do marcador
+        st_folium(st.session_state['map'], width=725, height=500)
+        
     else:
         st.write("Aguardando dados de rastreamento...")
 
