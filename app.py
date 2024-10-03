@@ -28,8 +28,20 @@ def get_tracking_data():
             })
     return pd.DataFrame(records)
 
-# Função para identificar se o dispositivo é celular ou computador
-def detect_device(width):
+# Função para detectar a largura da tela via JavaScript
+def get_device_type():
+    st.write(
+        """
+        <script>
+            const width = window.innerWidth;
+            const queryParams = new URLSearchParams(window.location.search);
+            queryParams.set("width", width);
+            window.location.search = queryParams.toString();
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
+    width = int(st.experimental_get_query_params().get("width", [1000])[0])
     if width < 768:
         return 'mobile'
     else:
@@ -41,15 +53,12 @@ st.set_page_config(page_title="Mapa de Rastreamento - OpenStreetMap", layout="ce
 # Carregar a imagem do logotipo
 st.image("https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg", use_column_width=True)
 
-# Detecta o dispositivo com base na largura da tela
-device_type = st.session_state.get('device_type', None)
-if device_type is None:
-    device_type = detect_device(st.experimental_get_query_params().get("width", [1024])[0])
-    st.session_state['device_type'] = device_type
+# Detectar o tipo de dispositivo
+device_type = get_device_type()
 
 # Define o tamanho do mapa com base no dispositivo
 if device_type == 'mobile':
-    map_width, map_height = 150, 200  # Tamanho ajustado para celular
+    map_width, map_height = 400, 400  # Tamanho ajustado para celular
 else:
     map_width, map_height = 1000, 1000  # Tamanho ajustado para computador
 
