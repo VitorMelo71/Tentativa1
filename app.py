@@ -1,79 +1,57 @@
 import streamlit as st
-import requests
-import pandas as pd
-import folium
-from streamlit_folium import st_folium
+from google.cloud import firestore
+import firebase_admin
+from firebase_admin import credentials, firestore
 import time
 
-# Configuração da API do Firestore e do Google Maps
+# Chaves de API
 FIRESTORE_API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
 GOOGLE_MAPS_API_KEY = "AIzaSyBJg0w7kTJ2tNWuEeeKgMPSqe97lrFel1w"
-PROJECT_ID = "banco-gps"
-COLLECTION = "CoordenadasGPS"
 
-FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/{COLLECTION}?key={FIRESTORE_API_KEY}"
+# Inicializando o Firebase
+if not firebase_admin._apps:
+    cred = credentials.Certificate("banco-gps-firebase-adminsdk.json")
+    firebase_admin.initialize_app(cred)
 
-# Função para buscar dados do Firestore via API REST
-def get_tracking_data():
-    response = requests.get(FIRESTORE_URL)
-    data = response.json()
+# Inicializando Firestore
+db = firestore.client()
 
-    records = []
-    if 'documents' in data:
-        for doc in data['documents']:
-            fields = doc['fields']
-            records.append({
-                'latitude': float(fields['latitude']['stringValue']),
-                'longitude': float(fields['longitude']['stringValue']),
-                'status': fields['status']['stringValue']
-            })
-    return pd.DataFrame(records)
+# Função para obter a localização do banco de dados Firestore
+def get_vehicle_location():
+    doc_ref = db.collection('CoordenadasGPS').document('veiculo')
+    doc = doc_ref.get()
+    if doc.exists:
+        data = doc.to_dict()
+        return float(data['latitude']), float(data['longitude'])
+    else:
+        st.error("Dados de localização não encontrados!")
+        return None, None
 
-# Configuração da página para celular (iPhone 11)
-st.set_page_config(page_title="CEAMAZON GPS", layout="centered")
+# Função para criar o mapa do Google
+def create_google_map(lat, lon):
+    map_html = f'''
+    <iframe width="100%" height="500" frameborder="0" style="border:0"
+    src="https://www.google.com/maps/embed/v1/place?key={GOOGLE_MAPS_API_KEY}&q={lat},{lon}&zoom=15" allowfullscreen>
+    </iframe>
+    '''
+    return map_html
 
-st.title("CEAMAZON GPS - Rastreamento")
+# Renderiza o mapa uma única vez
+lat, lon = get_vehicle_location()
+if lat is not None and lon is not None:
+    if "map_created" not in st.session_state:
+        st.session_state["map_created"] = True
+        st.markdown(create_google_map(lat, lon), unsafe_allow_html=True)
 
-# Inicializa o mapa apenas uma vez e mantém a posição e o zoom
-if 'map_initialized' not in st.session_state:
-    st.session_state['zoom'] = 15
-    st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
-    st.session_state['map_initialized'] = True
+# Função para atualizar apenas a localização do veículo
+def update_vehicle_marker():
+    while True:
+        lat, lon = get_vehicle_location()
+        if lat is not None and lon is not None:
+            # Apenas o marcador será atualizado
+            st.session_state["map_created"] = False  # Não recria o mapa
+            st.markdown(create_google_map(lat, lon), unsafe_allow_html=True)
+        time.sleep(10)  # Atualiza a cada 10 segundos
 
-# Cria um espaço reservado para o mapa
-map_placeholder = st.empty()
-
-# Inicializa o mapa usando Google Maps
-m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
-
-# Adiciona o TileLayer do Google Maps
-google_maps_tile = f"https://mt1.google.com/vt/lyrs=r&x={{x}}&y={{y}}&z={{z}}&key={GOOGLE_MAPS_API_KEY}"
-folium.TileLayer(tiles=google_maps_tile, attr="Google Maps", name="Google Maps").add_to(m)
-
-# Exibe o mapa inicialmente
-with map_placeholder:
-    st_folium(m, width=725, height=500)
-
-# Atualiza apenas os pontos de localização no mapa sem recarregar a página inteira
-while True:
-    # Carregar dados do Firestore
-    data_df = get_tracking_data()
-
-    if not data_df.empty:
-        # Criar um novo mapa apenas com os marcadores atualizados
-        marker_map = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles=None)
-        google_maps_tile = f"https://mt1.google.com/vt/lyrs=r&x={{x}}&y={{y}}&z={{z}}&key={GOOGLE_MAPS_API_KEY}"
-        folium.TileLayer(tiles=google_maps_tile, attr="Google Maps", name="Google Maps").add_to(marker_map)
-
-        # Adicionar marcadores
-        for index, row in data_df.iterrows():
-            folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(marker_map)
-
-        # Atualizar o mapa no espaço reservado sem recriar o mapa inteiro
-        with map_placeholder:
-            st_folium(marker_map, width=725, height=500)
-    # Atualiza o mapa com uma chave única para cada atualização
-    st_folium(marker_map, width=725, height=500, key=f"map_{time.time()}")
-    
-    # Pausa por um intervalo de tempo antes da próxima atualização
-    time.sleep(10)
+# Rodando a atualização da posição em loop
+update_vehicle_marker()
