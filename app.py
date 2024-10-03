@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import requests
+import time
 
 # Configuração da API do Firestore e Google Maps
 FIRESTORE_API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
@@ -39,7 +40,7 @@ if data:
     lat = latest_data['latitude']
     lon = latest_data['longitude']
 
-    # Inicializa o mapa do Google Maps uma vez
+    # Inicializa o mapa do Google Maps com JavaScript
     map_html = f"""
     <html>
       <head>
@@ -68,29 +69,41 @@ if data:
             map.setCenter(newPosition);
           }}
 
-          window.updateMarker = updateMarker;  // Define a função global para ser chamada externamente
+          // Função que atualiza a cada 10 segundos o marcador do Firebase
+          function refreshData() {{
+            setInterval(function() {{
+              fetch("/get_location_data").then(response => response.json()).then(data => {{
+                var newLat = data.latitude;
+                var newLon = data.longitude;
+                updateMarker(newLat, newLon);
+              }});
+            }}, 10000); // Atualiza a cada 10 segundos
+          }}
+
         </script>
       </head>
-      <body onload="initMap()">
+      <body onload="initMap(); refreshData();">
         <div id="map" style="width: 100%; height: 500px;"></div>
       </body>
     </html>
     """
 
+    # Exibe o mapa no componente Streamlit
     components.html(map_html, height=500)
 
-    # Atualiza o marcador automaticamente a cada 10 segundos
-    st_autorefresh(interval=10*1000, limit=None)
+# Backend do Streamlit que retorna os dados de localização do Firebase
+@st.cache(ttl=10)
+def get_firebase_data():
+    data = get_tracking_data()
+    if data:
+        return {
+            'latitude': data[0]['latitude'],
+            'longitude': data[0]['longitude']
+        }
+    return {'latitude': 0, 'longitude': 0}
 
-    # Atualiza os dados e envia o novo lat/lon para o JavaScript
-    new_data = get_tracking_data()
-    if new_data:
-        latest_data = new_data[0]
-        new_lat = latest_data['latitude']
-        new_lon = latest_data['longitude']
-        update_js = f"""
-        <script>
-            window.updateMarker({new_lat}, {new_lon});
-        </script>
-        """
-        components.html(update_js, height=0)
+# Endpoint para fornecer dados de localização em tempo real
+if st.button("Atualizar Localização do Veículo"):
+    st.experimental_rerun()
+
+st.json(get_firebase_data())
