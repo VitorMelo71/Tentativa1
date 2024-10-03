@@ -55,9 +55,11 @@ def update_vehicle_location():
         # Atualiza o marcador para a nova posição
         st.session_state['vehicle_marker'].location = [new_lat, new_lon]
 
-        # Se o botão for clicado, centraliza o mapa na localização do veículo
+        # Se o botão for clicado, centraliza o mapa na localização do veículo e ajusta o zoom
         if st.session_state.get('center_on_vehicle', False):
-            st.session_state['map'].location = [new_lat, new_lon]
+            st.session_state['map'] = folium.Map(location=[new_lat, new_lon], zoom_start=15, tiles="OpenStreetMap")
+            st.session_state['vehicle_marker'] = folium.Marker(location=[new_lat, new_lon], popup="Veículo")
+            st.session_state['vehicle_marker'].add_to(st.session_state['map'])
 
 # Cria um espaço reservado para o mapa e exibe-o
 map_placeholder = st.empty()
