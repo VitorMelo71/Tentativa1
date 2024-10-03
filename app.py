@@ -1,7 +1,6 @@
 import streamlit.components.v1 as components
 import streamlit as st
 import requests
-import time
 
 # Configuração da API do Firestore e Google Maps
 FIRESTORE_API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
@@ -32,7 +31,7 @@ def get_tracking_data():
 # Configuração da página
 st.set_page_config(page_title="CEAMAZON GPS - Rastreamento", layout="centered")
 
-# Aplica o modo dark ao fundo do site
+# Modo dark ao fundo do site
 st.markdown("""
     <style>
     body {
@@ -46,7 +45,7 @@ st.markdown("""
 
 st.title("CEAMAZON GPS - Rastreamento")
 
-# Função para renderizar o mapa com JavaScript e atualizar o marcador
+# Função para renderizar o mapa com JavaScript e o marcador
 def render_map(lat, lon):
     map_code = f"""
     <html>
@@ -68,11 +67,15 @@ def render_map(lat, lon):
               map: map,
               title: "Localização do Veículo"
             }});
+            window.map = map;
+            window.marker = marker;
           }}
 
           function updateMarker(lat, lon) {{
-            if (marker) {{
-              marker.setPosition(new google.maps.LatLng(lat, lon));
+            if (window.marker) {{
+              var newPosition = new google.maps.LatLng(lat, lon);
+              window.marker.setPosition(newPosition);
+              window.map.setCenter(newPosition);
             }}
           }}
 
@@ -87,26 +90,21 @@ def render_map(lat, lon):
     """
     components.html(map_code, height=500)
 
-# Função para atualizar a posição do marcador no mapa
-def update_marker(lat, lon):
-    update_code = f"""
-    <script>
-        updateMarker({lat}, {lon});
-    </script>
-    """
-    components.html(update_code, height=0)
-
-# Pega a posição inicial para renderizar o mapa
+# Carrega o mapa apenas uma vez
 data = get_tracking_data()
-
 if data:
     latest_data = data[0]
     render_map(latest_data['latitude'], latest_data['longitude'])
 
-# Atualiza a posição do veículo a cada 10 segundos sem recarregar o mapa
+# Atualiza o marcador a cada intervalo de tempo (exemplo: 10 segundos)
 while True:
     data = get_tracking_data()
     if data:
         latest_data = data[0]
-        update_marker(latest_data['latitude'], latest_data['longitude'])
-    time.sleep(5)
+        update_code = f"""
+        <script>
+            updateMarker({latest_data['latitude']}, {latest_data['longitude']});
+        </script>
+        """
+        components.html(update_code, height=0)  # Não renderiza um novo mapa, apenas atualiza o marcador
+    st.experimental_rerun()  # Força a atualização da parte do código que atualiza o marcador
