@@ -70,11 +70,10 @@ components.html(f"""
             }}
           }}
 
-          window.initMap = initMap;
-          window.updateMarker = updateMarker;
+          window.onload = initMap;
         </script>
       </head>
-      <body onload="initMap()">
+      <body>
         <div id="map" style="width: 100%; height: 500px;"></div>
       </body>
     </html>
@@ -86,6 +85,8 @@ def update_map(lat, lon):
         <script>
             if (typeof updateMarker !== "undefined") {{
                 updateMarker({lat}, {lon});
+            }} else {{
+                console.error('Função updateMarker não definida!');
             }}
         </script>
     """, height=0)
@@ -102,4 +103,4 @@ while True:
         update_map(lat, lon)
     
     # Aguarda 10 segundos para buscar novas coordenadas
-    time.sleep(10)
+    time.sleep(5)
