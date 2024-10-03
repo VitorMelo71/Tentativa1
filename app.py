@@ -98,7 +98,7 @@ if data:
     render_map(latest_data['latitude'], latest_data['longitude'])
 
 # Configuração para atualizar o marcador a cada 10 segundos
-update_interval = 10  # segundos
+update_interval = 3  # segundos
 
 # Loop de atualização do marcador
 while True:
