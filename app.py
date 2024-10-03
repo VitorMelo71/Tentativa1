@@ -36,9 +36,10 @@ st.title("Mapa de Rastreamento - OpenStreetMap")
 # Inicializa o mapa uma única vez
 if 'map' not in st.session_state:
     st.session_state['map'] = folium.Map(location=[-1.46906, -48.44755], zoom_start=15)
-    st.session_state['vehicle_marker'] = None  # Inicializa o marcador como None
+    st.session_state['vehicle_marker'] = folium.Marker(location=[-1.46906, -48.44755], popup="Veículo")
+    st.session_state['vehicle_marker'].add_to(st.session_state['map'])
 
-# Função para atualizar apenas o marcador do veículo
+# Função para atualizar apenas a localização do marcador do veículo
 def update_vehicle_location():
     # Obter os dados de rastreamento
     data_df = get_tracking_data()
@@ -49,15 +50,10 @@ def update_vehicle_location():
         new_lat = latest_data['latitude']
         new_lon = latest_data['longitude']
 
-        # Remove o marcador antigo, se existir
-        if st.session_state['vehicle_marker'] is not None:
-            st.session_state['map'].remove_child(st.session_state['vehicle_marker'])
+        # Atualiza a posição do marcador
+        st.session_state['vehicle_marker'].location = [new_lat, new_lon]
 
-        # Adiciona um novo marcador na posição atualizada
-        st.session_state['vehicle_marker'] = folium.Marker(location=[new_lat, new_lon], popup="Veículo")
-        st.session_state['vehicle_marker'].add_to(st.session_state['map'])
-
-# Exibe o mapa inicial e atualiza o marcador do veículo
+# Exibe o mapa e atualiza a localização do marcador
 while True:
     update_vehicle_location()
     
