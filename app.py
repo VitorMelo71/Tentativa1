@@ -49,7 +49,7 @@ if device_type is None:
 
 # Define o tamanho do mapa com base no dispositivo
 if device_type == 'mobile':
-    map_width, map_height = 400, 400  # Tamanho ajustado para celular
+    map_width, map_height = 150, 200  # Tamanho ajustado para celular
 else:
     map_width, map_height = 1000, 1000  # Tamanho ajustado para computador
 
