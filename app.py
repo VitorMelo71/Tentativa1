@@ -72,6 +72,8 @@ while True:
         # Atualizar o mapa no espaço reservado sem recriar o mapa inteiro
         with map_placeholder:
             st_folium(marker_map, width=725, height=500)
+    # Atualiza o mapa com uma chave única para cada atualização
+    st_folium(marker_map, width=725, height=500, key=f"map_{time.time()}")
     
     # Pausa por um intervalo de tempo antes da próxima atualização
     time.sleep(10)
