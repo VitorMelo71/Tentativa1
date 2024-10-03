@@ -34,7 +34,7 @@ st.set_page_config(page_title="Mapa de Rastreamento - OpenStreetMap", layout="ce
 st.title("Mapa de Rastreamento - OpenStreetMap")
 
 # Carrega a imagem da logo e a centraliza
-st.image("path/to/your/logo.png", use_column_width=True)
+st.image("https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.png", use_column_width=True)
 
 # Definir tamanhos de mapa específicos para computador e celular
 if st.session_state.get('device_type', 'computer') == 'computer':
