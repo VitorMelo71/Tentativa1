@@ -32,13 +32,13 @@ def get_tracking_data():
 # Configuração da página para celular
 st.set_page_config(page_title="CEAMAZON GPS - Rastreamento", layout="centered")
 
+# Aplica o modo dark ao fundo do site
 st.markdown("""
     <style>
     body {
         background-color: #121212;
-        color: white;
     }
-    .stText {
+    .stText, .stMarkdown, .stButton > button {
         color: white;
     }
     </style>
@@ -60,12 +60,7 @@ def render_map(lat, lon):
                 var mapOptions = {{
                   center: new google.maps.LatLng({lat}, {lon}),
                   zoom: 15,
-                  mapTypeId: google.maps.MapTypeId.ROADMAP,
-                  styles: [{{elementType: 'geometry', stylers: [{{color: '#212121'}}]}},
-                           {{elementType: 'labels.text.stroke', stylers: [{{color: '#212121'}}]}},
-                           {{elementType: 'labels.text.fill', stylers: [{{color: '#ffffff'}}]}},
-                           {{featureType: 'administrative', elementType: 'geometry', stylers: [{{color: '#757575'}}]}},
-                           {{featureType: 'poi', elementType: 'labels.text.fill', stylers: [{{color: '#ffffff'}}]}}]
+                  mapTypeId: google.maps.MapTypeId.ROADMAP
                 }};
                 map = new google.maps.Map(document.getElementById("map"), mapOptions);
                 marker = new google.maps.Marker({{
@@ -109,4 +104,4 @@ while True:
                 updateMarker({latest_data['latitude']}, {latest_data['longitude']});
             </script>
         """, height=0)
-    time.sleep(5)
+    time.sleep(10)
