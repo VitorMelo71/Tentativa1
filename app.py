@@ -41,12 +41,6 @@ if 'map_initialized' not in st.session_state:
     st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
     st.session_state['map'] = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
 
-# Cria um espaço reservado para o mapa
-map_placeholder = st.empty()
-
-# Exibir o mapa inicialmente
-map_placeholder.st_folium(st.session_state['map'], width=725, height=500)
-
 # Função para atualizar a localização do veículo
 def update_vehicle_location():
     data_df = get_tracking_data()
@@ -56,19 +50,22 @@ def update_vehicle_location():
         new_lat = data_df['latitude'].iloc[0]
         new_lon = data_df['longitude'].iloc[0]
 
-        # Remove o marcador anterior e adiciona um novo marcador
-        if 'vehicle_marker' in st.session_state:
-            st.session_state['map'].location = [new_lat, new_lon]  # Simplesmente atualiza a localização
-        else:
-            # Adiciona um novo marcador
+        # Adiciona o marcador do veículo, se não existir
+        if 'vehicle_marker' not in st.session_state:
             st.session_state['vehicle_marker'] = folium.Marker(location=[new_lat, new_lon], popup="Veículo")
             st.session_state['vehicle_marker'].add_to(st.session_state['map'])
+        else:
+            # Atualiza a localização do marcador
+            st.session_state['vehicle_marker'].location = [new_lat, new_lon]
 
-        # Atualiza o mapa no Streamlit sem recriar o mapa inteiro
-        map_placeholder.st_folium(st.session_state['map'], width=725, height=500)
+# Cria um espaço reservado para o mapa e exibe-o
+map_placeholder = st.empty()
+
+# Exibir o mapa inicialmente
+map_data = st_folium(st.session_state['map'], width=725, height=500)
 
 # Atualiza a localização do veículo a cada 1 segundo
 while True:
     update_vehicle_location()
+    map_placeholder.st_folium(st.session_state['map'], width=725, height=500)
     time.sleep(1)
-    st.experimental_rerun()
