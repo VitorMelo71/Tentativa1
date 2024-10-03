@@ -62,15 +62,17 @@ components.html(f"""
             }});
           }}
 
+          window.onload = initMap;
+
           function updateMarker(lat, lon) {{
-            if (marker && map) {{
+            if (typeof marker !== 'undefined' && typeof map !== 'undefined') {{
               var newPosition = new google.maps.LatLng(lat, lon);
               marker.setPosition(newPosition);
               map.setCenter(newPosition);
+            }} else {{
+              console.error("Mapa ou marcador não está definido corretamente.");
             }}
           }}
-
-          window.onload = initMap;
         </script>
       </head>
       <body>
@@ -81,12 +83,13 @@ components.html(f"""
 
 # Função para atualizar a posição do marcador no mapa
 def update_map(lat, lon):
+    # Injeta código JavaScript que chama a função de atualização do marcador
     components.html(f"""
         <script>
-            if (typeof updateMarker !== "undefined") {{
+            if (typeof updateMarker === 'function') {{
                 updateMarker({lat}, {lon});
             }} else {{
-                console.error('Função updateMarker não definida!');
+                console.error('Função updateMarker não está definida!');
             }}
         </script>
     """, height=0)
