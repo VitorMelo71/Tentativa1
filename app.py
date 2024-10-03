@@ -32,7 +32,45 @@ st.set_page_config(page_title="CEAMAZON GPS - Rastreamento", layout="centered")
 
 st.title("CEAMAZON GPS - Rastreamento")
 
-# Pega a posição inicial para renderizar o mapa
+# Função que renderiza o mapa no Streamlit
+def render_map(lat, lon):
+    map_html = f"""
+    <html>
+      <head>
+        <script src="https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}"></script>
+        <script>
+          var marker;
+          var map;
+
+          function initMap() {{
+            var mapOptions = {{
+              center: new google.maps.LatLng({lat}, {lon}),
+              zoom: 15,
+              mapTypeId: google.maps.MapTypeId.ROADMAP
+            }};
+            map = new google.maps.Map(document.getElementById("map"), mapOptions);
+            marker = new google.maps.Marker({{
+              position: new google.maps.LatLng({lat}, {lon}),
+              map: map,
+              title: "Localização do Veículo"
+            }});
+          }}
+
+          window.updateMarker = function(lat, lon) {{
+            var newPosition = new google.maps.LatLng(lat, lon);
+            marker.setPosition(newPosition);
+            map.setCenter(newPosition);
+          }}
+        </script>
+      </head>
+      <body onload="initMap();">
+        <div id="map" style="width: 100%; height: 500px;"></div>
+      </body>
+    </html>
+    """
+    components.html(map_html, height=500)
+
+# Obtém dados iniciais e renderiza o mapa
 data = get_tracking_data()
 
 if data:
@@ -40,66 +78,15 @@ if data:
     lat = latest_data['latitude']
     lon = latest_data['longitude']
 
-    # Inicializa o mapa do Google Maps com JavaScript
-    map_html = f"""
-<html>
-  <head>
-    <script src="https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}"></script>
-    <script>
-      var marker;
-      var map;
+    # Renderiza o mapa inicialmente
+    render_map(lat, lon)
 
-      function initMap() {{
-        var mapOptions = {{
-          center: new google.maps.LatLng({lat}, {lon}),
-          zoom: 15,
-          mapTypeId: google.maps.MapTypeId.ROADMAP
-        }};
-        map = new google.maps.Map(document.getElementById("map"),   
- mapOptions);
-        marker = new google.maps.Marker({{
-          position: new google.maps.LatLng({lat}, {lon}),
-          map: map,   
-
-          title: "Localização do Veículo"
-        }});
-      }}
-
-      function updateMarker(lat, lon) {{
-        var newPosition = new google.maps.LatLng(lat, lon);
-        marker.setPosition(newPosition);
-        map.setCenter(newPosition);
-      }}
-
-      // Função que atualiza a cada 1 SEGUNDO o marcador do Firebase
-      setInterval(function() {{
-        fetch("/get_location_data").then(response => response.json()).then(data => {{
-          var newLat = data.latitude;
-          var newLon = data.longitude;
-          updateMarker(newLat, newLon);
-        }});
-      }}, 1000); // Atualiza a cada 1 segundo
-    </script>
-  </head>
-  <body onload="initMap();">
-    <div id="map" style="width: 100%; height: 500px;"></div>
-  </body>
-</html>
-"""
-
-    # Exibe o mapa no componente Streamlit
-    components.html(map_html, height=500)
-
-# Backend do Streamlit que retorna os dados de localização do Firebase
-@st.cache(ttl=10)
-def get_firebase_data():
-    data = get_tracking_data()
-    if data:
-        return {
-            'latitude': data[0]['latitude'],
-            'longitude': data[0]['longitude']
-        }
-    return {'latitude': 0, 'longitude': 0}
-
-# Fornece as coordenadas em tempo real para o JavaScript
-st.json(get_firebase_data())
+    # Atualiza a posição do veículo a cada 10 segundos
+    while True:
+        data = get_tracking_data()
+        if data:
+            latest_data = data[0]
+            lat = latest_data['latitude']
+            lon = latest_data['longitude']
+            components.html(f"<script>window.updateMarker({lat}, {lon});</script>", height=0)
+        time.sleep(5)
