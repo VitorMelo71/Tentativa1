@@ -50,15 +50,15 @@ m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state[
 tracking_data = get_tracking_data()
 
 if not tracking_data.empty:
+    # Se o marcador já existir, apenas atualiza a posição
     if st.session_state['vehicle_marker']:
-        # Remove o marcador anterior
-        st.session_state['vehicle_marker'].pop().remove()
+        st.session_state['vehicle_marker'].location = [tracking_data['latitude'].iloc[0], tracking_data['longitude'].iloc[0]]
+    else:
+        # Adiciona o novo marcador se não existir
+        st.session_state['vehicle_marker'] = folium.Marker(
+            [tracking_data['latitude'].iloc[0], tracking_data['longitude'].iloc[0]],
+            popup="Ônibus"
+        ).add_to(m)
 
-    # Adiciona o novo marcador
-    st.session_state['vehicle_marker'] = folium.Marker(
-        [tracking_data['latitude'].iloc[0], tracking_data['longitude'].iloc[0]],
-        popup="Ônibus"
-    ).add_to(m)
-
-# Exibe o mapa uma única vez e o mantém estático
+# Exibe o mapa
 st_folium(m, key="map", width=1000, height=1000)
