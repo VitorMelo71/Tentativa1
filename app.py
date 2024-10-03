@@ -1,6 +1,7 @@
 import streamlit.components.v1 as components
 import streamlit as st
 import requests
+import time
 
 # Configuração da API do Firestore e Google Maps
 FIRESTORE_API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
@@ -96,7 +97,10 @@ if data:
     latest_data = data[0]
     render_map(latest_data['latitude'], latest_data['longitude'])
 
-# Atualiza o marcador a cada intervalo de tempo (exemplo: 10 segundos)
+# Configuração para atualizar o marcador a cada 10 segundos
+update_interval = 10  # segundos
+
+# Loop de atualização do marcador
 while True:
     data = get_tracking_data()
     if data:
@@ -106,5 +110,5 @@ while True:
             updateMarker({latest_data['latitude']}, {latest_data['longitude']});
         </script>
         """
-        components.html(update_code, height=0)  # Não renderiza um novo mapa, apenas atualiza o marcador
-    st.experimental_rerun()  # Força a atualização da parte do código que atualiza o marcador
+        components.html(update_code, height=0)  # Apenas atualiza o marcador sem renderizar um novo mapa
+    time.sleep(update_interval)
