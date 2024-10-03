@@ -10,6 +10,9 @@ PROJECT_ID = "banco-gps"
 COLLECTION = "CoordenadasGPS"
 FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/{COLLECTION}?key={FIRESTORE_API_KEY}"
 
+# URL para o ícone personalizado (sa.jpg)
+BUS_ICON_URL = "https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg"
+
 # Função para buscar dados do Firestore via API REST
 def get_tracking_data():
     response = requests.get(FIRESTORE_URL)
@@ -54,7 +57,8 @@ def render_map(lat, lon):
                 marker = new google.maps.Marker({{
                   position: new google.maps.LatLng({lat}, {lon}),
                   map: map,
-                  title: "Localização do Veículo"
+                  title: "Localização do Veículo",
+                  icon: "{BUS_ICON_URL}"  // Ícone personalizado
                 }});
               }}
 
