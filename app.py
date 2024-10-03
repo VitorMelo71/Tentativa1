@@ -27,7 +27,7 @@ def get_tracking_data():
             })
     return records
 
-# Configuração da página para celular
+# Configuração da página
 st.set_page_config(page_title="CEAMAZON GPS - Rastreamento", layout="centered")
 
 st.title("CEAMAZON GPS - Rastreamento")
@@ -70,19 +70,16 @@ if data:
           }}
 
           // Função que atualiza a cada 10 segundos o marcador do Firebase
-          function refreshData() {{
-            setInterval(function() {{
+          setInterval(function() {{
               fetch("/get_location_data").then(response => response.json()).then(data => {{
                 var newLat = data.latitude;
                 var newLon = data.longitude;
                 updateMarker(newLat, newLon);
               }});
-            }}, 10000); // Atualiza a cada 10 segundos
-          }}
-
+          }}, 10000); // Atualiza a cada 10 segundos
         </script>
       </head>
-      <body onload="initMap(); refreshData();">
+      <body onload="initMap();">
         <div id="map" style="width: 100%; height: 500px;"></div>
       </body>
     </html>
@@ -102,8 +99,5 @@ def get_firebase_data():
         }
     return {'latitude': 0, 'longitude': 0}
 
-# Endpoint para fornecer dados de localização em tempo real
-if st.button("Atualizar Localização do Veículo"):
-    st.experimental_rerun()
-
+# Fornece as coordenadas em tempo real para o JavaScript
 st.json(get_firebase_data())
