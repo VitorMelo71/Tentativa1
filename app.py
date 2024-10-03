@@ -72,6 +72,17 @@ def update_vehicle_location():
 # Cria um espaço reservado para o mapa e exibe-o
 map_placeholder = st.empty()
 
+# Função para atualizar o mapa mantendo o zoom e a posição
+def update_map():
+    # Mantém o estado atual do zoom e do centro do mapa
+    bounds = st.session_state['map'].get_bounds()
+    st.session_state['center'] = [(bounds[0][0] + bounds[1][0]) / 2, (bounds[0][1] + bounds[1][1]) / 2]
+    st.session_state['zoom'] = st.session_state['map']._zoom
+
+    # Recria o mapa com a nova posição e zoom
+    st.session_state['map'] = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
+    st.session_state['vehicle_marker'].add_to(st.session_state['map'])
+
 # Exibir o mapa inicialmente
 with map_placeholder:
     folium_static(st.session_state['map'], width=map_width, height=map_height)
@@ -79,6 +90,9 @@ with map_placeholder:
 # Atualiza a localização do veículo a cada 1 segundo
 while True:
     update_vehicle_location()
+
+    # Atualiza o mapa no Streamlit mantendo o estado do zoom e centro do mapa
+    update_map()
 
     # Atualiza o mapa no Streamlit sem recriar todo o mapa
     with map_placeholder:
