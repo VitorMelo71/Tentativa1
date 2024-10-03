@@ -1,20 +1,22 @@
 import streamlit as st
-import folium
-from streamlit_folium import st_folium
-import time
 import requests
 import pandas as pd
+import folium
+from streamlit_folium import folium_static
+import time
 
 # Configuração da API do Firestore
-API_KEY = "Sua API"
+API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
 PROJECT_ID = "banco-gps"
 COLLECTION = "CoordenadasGPS"
+
 FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/{COLLECTION}?key={API_KEY}"
 
 # Função para buscar dados do Firestore via API REST
 def get_tracking_data():
     response = requests.get(FIRESTORE_URL)
     data = response.json()
+
     records = []
     if 'documents' in data:
         for doc in data['documents']:
@@ -26,43 +28,46 @@ def get_tracking_data():
             })
     return pd.DataFrame(records)
 
-# Inicializa o mapa apenas uma vez
+# Configuração da página
+st.set_page_config(page_title="Mapa de Rastreamento - OpenStreetMap", layout="centered")
+
+# Carregar a imagem do logotipo
+st.image("https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg", use_column_width=True)
+
+# Inicializa o mapa uma única vez
 if 'map_initialized' not in st.session_state:
-    st.session_state['zoom'] = 15
-    st.session_state['center'] = [-1.46906, -48.44755]
     st.session_state['map_initialized'] = True
-    st.session_state['vehicle_marker'] = None
+    st.session_state['zoom'] = 15
+    st.session_state['center'] = [-1.4758328448621312, -48.45521125264769]  # Coordenadas padrão
+    st.session_state['map'] = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
+    st.session_state['vehicle_marker'] = folium.Marker(location=st.session_state['center'], popup="Veículo")
+    st.session_state['vehicle_marker'].add_to(st.session_state['map'])
 
-st.title("Mapa de Rastreamento - OpenStreetMap")
+# Função para atualizar a localização do veículo
+def update_vehicle_location():
+    data_df = get_tracking_data()
 
-# Botão para ir para a localização do veículo
-if st.button("Ir para a localização do ônibus"):
-    tracking_data = get_tracking_data()
-    if not tracking_data.empty:
-        # Atualiza o centro do mapa para a posição do veículo
-        st.session_state['center'] = [tracking_data['latitude'].iloc[0], tracking_data['longitude'].iloc[0]]
-        st.session_state['zoom'] = 15
-        st.session_state['vehicle_marker'] = None  # Reseta o marcador para ser recriado
+    if not data_df.empty:
+        # Atualiza a localização do veículo
+        new_lat = data_df['latitude'].iloc[0]
+        new_lon = data_df['longitude'].iloc[0]
 
-# Inicializa o mapa
-m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
+        # Atualiza o marcador para a nova posição
+        st.session_state['vehicle_marker'].location = [new_lat, new_lon]
 
-# Atualiza o ponto de localização no mapa
-tracking_data = get_tracking_data()
+# Cria um espaço reservado para o mapa e exibe-o
+map_placeholder = st.empty()
 
-if not tracking_data.empty:
-    # Cria ou atualiza o marcador
-    marker_location = [tracking_data['latitude'].iloc[0], tracking_data['longitude'].iloc[0]]
-    if st.session_state['vehicle_marker'] is None:
-        # Adiciona o marcador se não existir
-        st.session_state['vehicle_marker'] = folium.Marker(
-            location=marker_location,
-            popup="Ônibus",
-            icon=folium.Icon(color="blue", icon="bus", prefix='fa')
-        ).add_to(m)
-    else:
-        # Atualiza a posição do marcador existente
-        st.session_state['vehicle_marker'].location = marker_location
+# Exibir o mapa inicialmente
+with map_placeholder:
+    folium_static(st.session_state['map'], width=1000, height=1000)
 
-# Exibe o mapa
-st_folium(m, key="map", width=1000, height=1000)
+# Atualiza a localização do veículo a cada 1 segundo
+while True:
+    update_vehicle_location()
+
+    # Atualiza o mapa no Streamlit sem recriar todo o mapa
+    with map_placeholder:
+        folium_static(st.session_state['map'], width=1000, height=1000)
+
+    time.sleep(1)
