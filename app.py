@@ -9,6 +9,7 @@ import time
 API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
 PROJECT_ID = "banco-gps"
 COLLECTION = "CoordenadasGPS"
+
 FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/{COLLECTION}?key={API_KEY}"
 
 # Função para buscar dados do Firestore via API REST
@@ -30,47 +31,38 @@ def get_tracking_data():
 # Configuração da página
 st.set_page_config(page_title="Rastreamento em Tempo Real", layout="centered")
 
-st.title("CEAMAZON - GPS")
+st.title("Mapa de Rastreamento - OpenStreetMap")
 
 # Inicializa o mapa uma única vez
-if 'map' not in st.session_state:
+if 'map_initialized' not in st.session_state:
+    st.session_state['map_initialized'] = True
     st.session_state['zoom'] = 15
     st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
-    
-    # Criação inicial do mapa
-    m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
-    
-    # Adiciona um marcador inicial
+    st.session_state['map'] = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
+
+# Adiciona um marcador de veículo inicial (ajustável)
+if 'vehicle_marker' not in st.session_state:
     st.session_state['vehicle_marker'] = folium.Marker(location=st.session_state['center'], popup="Veículo")
-    st.session_state['vehicle_marker'].add_to(m)
+    st.session_state['vehicle_marker'].add_to(st.session_state['map'])
 
-    # Renderiza o mapa e salva no estado
-    st.session_state['map'] = m
-    st_folium(st.session_state['map'], width=725, height=500)
+# Cria um espaço reservado para o mapa
+map_placeholder = st.empty()
 
-# Função para atualizar a posição do veículo
+# Exibir o mapa
+with map_placeholder:
+    st_folium(st.session_state['map'], width=725, height=500, key="main_map")
+
+# Função para atualizar a localização do veículo
 def update_vehicle_location():
-    data_df = get_tracking_data()
+    # Simula a obtenção de novas coordenadas
+    new_lat, new_lon = -1.469, -48.448  # Simule isso como vindo do Firestore
+    st.session_state['vehicle_marker'].location = [new_lat, new_lon]
 
-    if not data_df.empty:
-        # Obtém a última posição do veículo
-        latest_data = data_df.iloc[0]
-        new_lat = latest_data['latitude']
-        new_lon = latest_data['longitude']
-
-        # Atualiza a posição do marcador
-        st.session_state['vehicle_marker'].location = [new_lat, new_lon]
-        
-        # Remove o marcador antigo e adiciona o novo no mapa
-        st.session_state['map'].location = [new_lat, new_lon]
-        
-        # Renderiza o mapa atualizado
-        st_folium(st.session_state['map'], width=725, height=500)
-        
-    else:
-        st.write("Aguardando dados de rastreamento...")
+    # Atualiza o marcador no mapa
+    with map_placeholder:
+        st_folium(st.session_state['map'], width=725, height=500, key="updated_map")
 
 # Atualiza a localização do veículo a cada 10 segundos
 while True:
     update_vehicle_location()
-    time.sleep(5)
+    time.sleep(10)
