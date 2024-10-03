@@ -35,7 +35,6 @@ st.set_page_config(page_title="Mapa de Rastreamento - OpenStreetMap", layout="ce
 st.image("https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg", use_column_width=True)
 
 # Caixa de ferramentas com botão para ajustar resolução
-st.markdown("### Caixa de ferramentas")
 with st.expander("Ajustes de Resolução do Mapa"):
     ajusta_resolucao = st.radio("Escolha a resolução do mapa:", ('Padrão', 'Resolução para Celular'))
 
