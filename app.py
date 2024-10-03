@@ -81,20 +81,6 @@ if data:
     latest_data = data[0]
     render_map(latest_data['latitude'], latest_data['longitude'])
 
-# Botão para centralizar no veículo
-if st.button("Centralizar no veículo"):
-    data = get_tracking_data()
-    if data:
-        latest_data = data[0]
-        # Executa o JavaScript para centralizar no veículo sem recriar o mapa
-        components.html(f"""
-            <script>
-                var newPosition = new google.maps.LatLng({latest_data['latitude']}, {latest_data['longitude']});
-                map.setCenter(newPosition);
-                marker.setPosition(newPosition);
-            </script>
-        """, height=0)
-
 # Atualiza a posição do veículo a cada 10 segundos sem recarregar o mapa
 while True:
     data = get_tracking_data()
@@ -106,4 +92,4 @@ while True:
                 updateMarker({latest_data['latitude']}, {latest_data['longitude']});
             </script>
         """, height=0)
-    time.sleep(10)
+    time.sleep(5)
