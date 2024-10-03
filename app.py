@@ -96,4 +96,4 @@ while True:
             </script>
         """, height=0)
     
-    time.sleep(10)
+    time.sleep(5)
