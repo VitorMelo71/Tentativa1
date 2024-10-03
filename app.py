@@ -38,6 +38,8 @@ if 'map_initialized' not in st.session_state:
     st.session_state['zoom'] = 15
     st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
     st.session_state['map_initialized'] = True
+    # Criação inicial do mapa
+    st.session_state['map'] = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
 
 # Cria um espaço reservado para o mapa
 map_placeholder = st.empty()
@@ -47,19 +49,19 @@ def update_map():
     # Carregar dados do Firestore
     data_df = get_tracking_data()
 
-    # Inicializa o mapa
-    m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
-
     if not data_df.empty:
-        # Adiciona marcadores com base nas novas localizações
+        # Atualiza o ponto de localização no mapa sem recarregar a página
         for index, row in data_df.iterrows():
-            folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(m)
+            folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(st.session_state['map'])
 
     # Exibe o mapa no espaço reservado
     with map_placeholder:
-        st_folium(m, width=725, height=500)
+        st_folium(st.session_state['map'], width=725, height=500)
 
-# Atualiza o mapa manualmente a cada 10 segundos
+# Chama a função de atualização uma vez
+update_map()
+
+# Pausar por um intervalo de tempo antes da próxima atualização
 while True:
+    time.sleep(10)
     update_map()
-    time.sleep(5)
