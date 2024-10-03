@@ -53,11 +53,17 @@ def update_vehicle_location():
         # Atualiza a posição do marcador
         st.session_state['vehicle_marker'].location = [new_lat, new_lon]
 
-# Exibe o mapa e atualiza a localização do marcador
+# Renderizar o mapa apenas uma vez
+map_placeholder = st.empty()
+with map_placeholder:
+    st_folium(st.session_state['map'], width=725, height=500)
+
+# Atualiza a localização do veículo sem renderizar novamente o mapa
 while True:
     update_vehicle_location()
     
-    # Renderiza o mapa com o marcador atualizado
-    map_placeholder = st_folium(st.session_state['map'], width=725, height=500)
-    
+    # Atualiza o estado do marcador no mapa
+    st.session_state['vehicle_marker'].location = st.session_state['vehicle_marker'].location
+
+    # Espera 10 segundos para a próxima atualização
     time.sleep(10)
