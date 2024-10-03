@@ -11,7 +11,7 @@ COLLECTION = "CoordenadasGPS"
 FIRESTORE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/{COLLECTION}?key={FIRESTORE_API_KEY}"
 
 # URL para o ícone personalizado
-BUS_ICON_URL = "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.pngegg.com%2Fpt%2Fpng-oucxu&psig=AOvVaw14zHFE5_Usj6u3K_Ce0Aho&ust=1728012843136000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCOiwts2j8YgDFQAAAAAdAAAAABAE"
+BUS_ICON_URL = "https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.png"
 
 # Função para buscar dados do Firestore via API REST
 def get_tracking_data():
@@ -87,8 +87,7 @@ while True:
     data = get_tracking_data()
     if data:
         latest_data = data[0]
-        # Executa o JavaScript para atualizar o marcador sem recarregar o mapa
-        st.experimental_rerun()  # Força a página a atualizar os componentes
+        # Atualiza o marcador sem recarregar o mapa
         components.html(f"""
             <script>
                 updateMarker({latest_data['latitude']}, {latest_data['longitude']});
