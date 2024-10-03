@@ -52,17 +52,17 @@ def update_vehicle_location():
     data_df = get_tracking_data()
 
     if not data_df.empty:
-        # Remove o marcador anterior, se houver
-        if 'vehicle_marker' in st.session_state:
-            st.session_state['map'].remove_child(st.session_state['vehicle_marker'])
-
         # Atualiza a localização do veículo
         new_lat = data_df['latitude'].iloc[0]
         new_lon = data_df['longitude'].iloc[0]
 
-        # Adiciona um novo marcador com a nova posição do veículo
-        st.session_state['vehicle_marker'] = folium.Marker(location=[new_lat, new_lon], popup="Veículo")
-        st.session_state['vehicle_marker'].add_to(st.session_state['map'])
+        # Remove o marcador anterior e adiciona um novo marcador
+        if 'vehicle_marker' in st.session_state:
+            st.session_state['map'].location = [new_lat, new_lon]  # Simplesmente atualiza a localização
+        else:
+            # Adiciona um novo marcador
+            st.session_state['vehicle_marker'] = folium.Marker(location=[new_lat, new_lon], popup="Veículo")
+            st.session_state['vehicle_marker'].add_to(st.session_state['map'])
 
         # Atualiza o mapa no Streamlit sem recriar o mapa inteiro
         with map_placeholder:
