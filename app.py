@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
+import time
 
 # Configuração da API do Firestore
 API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
@@ -67,7 +68,8 @@ def update_vehicle_location():
         with map_placeholder:
             st_folium(st.session_state['map'], width=725, height=500)
 
-# Atualiza a localização do veículo a cada 10 segundos
+# Atualiza a localização do veículo a cada 1 segundo
 while True:
     update_vehicle_location()
+    time.sleep(1)
     st.experimental_rerun()
