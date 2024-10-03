@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
+import time
 
 # Configuração da API do Firestore
 API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
@@ -50,7 +51,7 @@ def update_map():
     m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
 
     if not data_df.empty:
-        # Insere novos marcadores com base na nova localização
+        # Adiciona marcadores com base nas novas localizações
         for index, row in data_df.iterrows():
             folium.Marker([row['latitude'], row['longitude']], popup=row['status']).add_to(m)
 
