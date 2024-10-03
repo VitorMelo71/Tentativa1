@@ -35,7 +35,7 @@ st.set_page_config(page_title="CEAMAZON GPS - Rastreamento", layout="centered")
 st.title("CEAMAZON GPS - Rastreamento")
 
 # Função para renderizar o mapa
-def render_map(lat, lon, centralize=False):
+def render_map(lat, lon):
     map_code = f"""
         <html>
           <head>
@@ -61,9 +61,6 @@ def render_map(lat, lon, centralize=False):
               function updateMarker(lat, lon) {{
                 var newPosition = new google.maps.LatLng(lat, lon);
                 marker.setPosition(newPosition);
-                if ({'true' if centralize else 'false'}) {{
-                    map.setCenter(newPosition);
-                }}
               }}
 
               window.initMap = initMap;
@@ -84,12 +81,19 @@ if data:
     latest_data = data[0]
     render_map(latest_data['latitude'], latest_data['longitude'])
 
-# Adiciona o botão para centralizar no veículo
+# Botão para centralizar no veículo
 if st.button("Centralizar no veículo"):
+    data = get_tracking_data()
     if data:
         latest_data = data[0]
-        # Centraliza o mapa na posição atual do veículo
-        render_map(latest_data['latitude'], latest_data['longitude'], centralize=True)
+        # Executa o JavaScript para centralizar no veículo sem recriar o mapa
+        components.html(f"""
+            <script>
+                var newPosition = new google.maps.LatLng({latest_data['latitude']}, {latest_data['longitude']});
+                map.setCenter(newPosition);
+                marker.setPosition(newPosition);
+            </script>
+        """, height=0)
 
 # Atualiza a posição do veículo a cada 10 segundos sem recarregar o mapa
 while True:
