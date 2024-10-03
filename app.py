@@ -32,6 +32,18 @@ def get_tracking_data():
 # Configuração da página para celular
 st.set_page_config(page_title="CEAMAZON GPS - Rastreamento", layout="centered")
 
+st.markdown("""
+    <style>
+    body {
+        background-color: #121212;
+        color: white;
+    }
+    .stText {
+        color: white;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("CEAMAZON GPS - Rastreamento")
 
 # Função para renderizar o mapa
@@ -48,7 +60,12 @@ def render_map(lat, lon):
                 var mapOptions = {{
                   center: new google.maps.LatLng({lat}, {lon}),
                   zoom: 15,
-                  mapTypeId: google.maps.MapTypeId.ROADMAP
+                  mapTypeId: google.maps.MapTypeId.ROADMAP,
+                  styles: [{{elementType: 'geometry', stylers: [{{color: '#212121'}}]}},
+                           {{elementType: 'labels.text.stroke', stylers: [{{color: '#212121'}}]}},
+                           {{elementType: 'labels.text.fill', stylers: [{{color: '#ffffff'}}]}},
+                           {{featureType: 'administrative', elementType: 'geometry', stylers: [{{color: '#757575'}}]}},
+                           {{featureType: 'poi', elementType: 'labels.text.fill', stylers: [{{color: '#ffffff'}}]}}]
                 }};
                 map = new google.maps.Map(document.getElementById("map"), mapOptions);
                 marker = new google.maps.Marker({{
@@ -67,7 +84,7 @@ def render_map(lat, lon):
               window.updateMarker = updateMarker;
             </script>
           </head>
-          <body onload="initMap()">
+          <body onload="initMap()" style="background-color: #121212;">
             <div id="map" style="width: 100%; height: 500px;"></div>
           </body>
         </html>
