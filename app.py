@@ -61,7 +61,10 @@ def render_map(lat, lon):
               window.updateMarker = function(lat, lon) {{
                 var newPosition = new google.maps.LatLng(lat, lon);
                 marker.setPosition(newPosition);
-                map.setCenter(newPosition);
+              }};
+
+              window.centerMap = function(lat, lon) {{
+                map.setCenter(new google.maps.LatLng(lat, lon));
               }};
             </script>
           </head>
@@ -77,6 +80,17 @@ data = get_tracking_data()
 if data:
     latest_data = data[0]
     render_map(latest_data['latitude'], latest_data['longitude'])
+
+# Adiciona o botão para centralizar no veículo
+if st.button("Centralizar no veículo"):
+    if data:
+        latest_data = data[0]
+        # Centraliza o mapa na posição atual do veículo
+        components.html(f"""
+            <script>
+                centerMap({latest_data['latitude']}, {latest_data['longitude']});
+            </script>
+        """, height=0)
 
 # Atualiza a posição do veículo a cada 10 segundos
 while True:
