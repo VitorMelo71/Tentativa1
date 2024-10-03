@@ -32,54 +32,59 @@ st.set_page_config(page_title="CEAMAZON GPS - Rastreamento", layout="centered")
 
 st.title("CEAMAZON GPS - Rastreamento")
 
-# Função para renderizar o mapa Google Maps
-def render_map(lat, lon):
-    components.html(f"""
-        <html>
-          <head>
-            <script src="https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}"></script>
-            <script>
-              var marker;
-              var map;
-
-              function initMap() {{
-                var mapOptions = {{
-                  center: new google.maps.LatLng({lat}, {lon}),
-                  zoom: 15,
-                  mapTypeId: google.maps.MapTypeId.ROADMAP
-                }};
-                map = new google.maps.Map(document.getElementById("map"), mapOptions);
-                marker = new google.maps.Marker({{
-                  position: new google.maps.LatLng({lat}, {lon}),
-                  map: map,
-                  title: "Localização do Veículo"
-                }});
-              }}
-
-              function updateMarker(lat, lon) {{
-                var newPosition = new google.maps.LatLng(lat, lon);
-                marker.setPosition(newPosition);
-                map.setCenter(newPosition);
-              }}
-
-              window.updateMarker = updateMarker;
-              window.onload = initMap;
-            </script>
-          </head>
-          <body>
-            <div id="map" style="width: 100%; height: 500px;"></div>
-          </body>
-        </html>
-    """, height=500)
-
-# Inicializa o mapa com a posição inicial
+# Pega a posição inicial para renderizar o mapa
 data = get_tracking_data()
-
 if data:
     latest_data = data[0]
     lat = latest_data['latitude']
     lon = latest_data['longitude']
-    render_map(lat, lon)
+
+# Função para renderizar o mapa e incluir a função de atualização
+components.html(f"""
+    <html>
+      <head>
+        <script src="https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}"></script>
+        <script>
+          var marker;
+          var map;
+
+          function initMap() {{
+            var mapOptions = {{
+              center: new google.maps.LatLng({lat}, {lon}),
+              zoom: 15,
+              mapTypeId: google.maps.MapTypeId.ROADMAP
+            }};
+            map = new google.maps.Map(document.getElementById("map"), mapOptions);
+            marker = new google.maps.Marker({{
+              position: new google.maps.LatLng({lat}, {lon}),
+              map: map,
+              title: "Localização do Veículo"
+            }});
+          }}
+
+          function updateMarker(lat, lon) {{
+            var newPosition = new google.maps.LatLng(lat, lon);
+            marker.setPosition(newPosition);
+            map.setCenter(newPosition);
+          }}
+
+          window.initMap = initMap;
+          window.updateMarker = updateMarker;
+        </script>
+      </head>
+      <body onload="initMap()">
+        <div id="map" style="width: 100%; height: 500px;"></div>
+      </body>
+    </html>
+""", height=500)
+
+# Função para atualizar a posição do marcador no mapa
+def update_map(lat, lon):
+    components.html(f"""
+        <script>
+            updateMarker({lat}, {lon});
+        </script>
+    """, height=0)
 
 # Atualiza a posição do veículo a cada 10 segundos sem recarregar o mapa
 while True:
@@ -89,11 +94,8 @@ while True:
         lat = latest_data['latitude']
         lon = latest_data['longitude']
         
-        # Chama a função JavaScript para atualizar o marcador
-        components.html(f"""
-            <script>
-                updateMarker({lat}, {lon});
-            </script>
-        """, height=0)
+        # Atualiza o marcador com as novas coordenadas
+        update_map(lat, lon)
     
-    time.sleep(5)
+    # Aguarda 10 segundos para buscar novas coordenadas
+    time.sleep(10)
