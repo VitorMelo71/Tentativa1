@@ -42,6 +42,7 @@ if st.button("Ir para a localização do ônibus"):
         # Atualiza o centro do mapa para a posição do veículo
         st.session_state['center'] = [tracking_data['latitude'].iloc[0], tracking_data['longitude'].iloc[0]]
         st.session_state['zoom'] = 15
+        st.session_state['vehicle_marker'] = None  # Reseta o marcador para ser recriado
 
 # Inicializa o mapa
 m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
@@ -50,15 +51,18 @@ m = folium.Map(location=st.session_state['center'], zoom_start=st.session_state[
 tracking_data = get_tracking_data()
 
 if not tracking_data.empty:
-    # Se o marcador já existir, apenas atualiza a posição
-    if st.session_state['vehicle_marker']:
-        st.session_state['vehicle_marker'].location = [tracking_data['latitude'].iloc[0], tracking_data['longitude'].iloc[0]]
-    else:
-        # Adiciona o novo marcador se não existir
+    # Cria ou atualiza o marcador
+    marker_location = [tracking_data['latitude'].iloc[0], tracking_data['longitude'].iloc[0]]
+    if st.session_state['vehicle_marker'] is None:
+        # Adiciona o marcador se não existir
         st.session_state['vehicle_marker'] = folium.Marker(
-            [tracking_data['latitude'].iloc[0], tracking_data['longitude'].iloc[0]],
-            popup="Ônibus"
+            location=marker_location,
+            popup="Ônibus",
+            icon=folium.Icon(color="blue", icon="bus", prefix='fa')
         ).add_to(m)
+    else:
+        # Atualiza a posição do marcador existente
+        st.session_state['vehicle_marker'].location = marker_location
 
 # Exibe o mapa
 st_folium(m, key="map", width=1000, height=1000)
