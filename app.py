@@ -69,4 +69,4 @@ if data:
             # Atualiza o mapa no Streamlit
             map_placeholder = st_folium(folium_map, height=500, width=700)
         
-        time.sleep(10)
+        time.sleep(5)
