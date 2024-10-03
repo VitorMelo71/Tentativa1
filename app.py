@@ -6,7 +6,7 @@ from streamlit_folium import st_folium
 import time
 
 # Configuração da API do Firestore
-API_KEY = "AIzaSyCrTdYbECD-ECWNirQBBfPjggedBrRYMeg"
+API_KEY = "YOUR_FIRESTORE_API_KEY"
 PROJECT_ID = "banco-gps"
 COLLECTION = "CoordenadasGPS"
 
@@ -29,44 +29,48 @@ def get_tracking_data():
     return pd.DataFrame(records)
 
 # Configuração da página
-st.set_page_config(page_title="Mapa de Rastreamento", layout="centered")
+st.set_page_config(page_title="Mapa de Rastreamento - OpenStreetMap", layout="centered")
 
-st.title("CEAMAZON - GPS")
+st.title("Mapa de Rastreamento - OpenStreetMap")
+
+# Carrega a imagem da logo e a centraliza
+st.image("path/to/your/logo.png", use_column_width=True)
+
+# Definir tamanhos de mapa específicos para computador e celular
+if st.session_state.get('device_type', 'computer') == 'computer':
+    map_width, map_height = 900, 600  # Mapa maior para computadores
+else:
+    map_width, map_height = 725, 500  # Mapa menor para celulares
 
 # Inicializa o mapa uma única vez
-if 'map' not in st.session_state:
-    st.session_state['map'] = folium.Map(location=[-1.46906, -48.44755], zoom_start=15)
-    st.session_state['vehicle_marker'] = folium.Marker(location=[-1.46906, -48.44755], popup="Veículo")
-    st.session_state['vehicle_marker'].add_to(st.session_state['map'])
+if 'map_initialized' not in st.session_state:
+    st.session_state['map_initialized'] = True
     st.session_state['zoom'] = 15
-    st.session_state['center'] = [-1.46906, -48.44755]
+    st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
+    st.session_state['map'] = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'])
+    st.session_state['vehicle_marker'] = folium.Marker(location=st.session_state['center'], popup="Veículo")
+    st.session_state['vehicle_marker'].add_to(st.session_state['map'])
 
-# Função para atualizar apenas a localização do marcador do veículo
+# Exibe o mapa inicialmente
+map_placeholder = st.empty()
+with map_placeholder:
+    st_folium(st.session_state['map'], width=map_width, height=map_height)
+
+# Atualiza o ponto de localização no mapa sem recarregar a página inteira
 def update_vehicle_location():
     data_df = get_tracking_data()
 
     if not data_df.empty:
-        latest_data = data_df.iloc[0]
-        new_lat = latest_data['latitude']
-        new_lon = latest_data['longitude']
+        new_lat, new_lon = data_df['latitude'].iloc[0], data_df['longitude'].iloc[0]
 
-        # Atualiza a posição do marcador
+        # Atualiza o marcador com a nova posição do veículo
         st.session_state['vehicle_marker'].location = [new_lat, new_lon]
 
-# Exibir o mapa e capturar interações do usuário
-map_data = st_folium(st.session_state['map'], width=725, height=500)
+        # Renderiza o mapa atualizado
+        map_placeholder.empty()
+        with map_placeholder:
+            st_folium(st.session_state['map'], width=map_width, height=map_height)
 
-# Verificar se há dados de limites no mapa
-if map_data and 'bounds' in map_data:
-    bounds = map_data['bounds']
-    if 'northEast' in bounds and 'southWest' in bounds:
-        st.session_state['center'] = [
-            (bounds['northEast']['lat'] + bounds['southWest']['lat']) / 2,
-            (bounds['northEast']['lng'] + bounds['southWest']['lng']) / 2
-        ]
-        st.session_state['zoom'] = map_data['zoom']
-
-# Atualiza a localização do veículo a cada 10 segundos
 while True:
     update_vehicle_location()
-    time.sleep(1)
+    time.sleep(1)  # Intervalo de atualização
