@@ -36,9 +36,7 @@ st.title("Mapa de Rastreamento - OpenStreetMap")
 # Inicializa o mapa uma única vez
 if 'map' not in st.session_state:
     st.session_state['map'] = folium.Map(location=[-1.46906, -48.44755], zoom_start=15)
-
-# Cria um espaço reservado para o mapa
-map_placeholder = st.empty()
+    st.session_state['vehicle_marker'] = None  # Inicializa o marcador como None
 
 # Função para atualizar apenas o marcador do veículo
 def update_vehicle_location():
@@ -52,20 +50,18 @@ def update_vehicle_location():
         new_lon = latest_data['longitude']
 
         # Remove o marcador antigo, se existir
-        if 'vehicle_marker' in st.session_state:
+        if st.session_state['vehicle_marker'] is not None:
             st.session_state['map'].remove_child(st.session_state['vehicle_marker'])
 
         # Adiciona um novo marcador na posição atualizada
         st.session_state['vehicle_marker'] = folium.Marker(location=[new_lat, new_lon], popup="Veículo")
         st.session_state['vehicle_marker'].add_to(st.session_state['map'])
 
-        # Atualiza o mapa sem perder o zoom e a posição do usuário
-        map_placeholder.folium_static(st.session_state['map'])
-
-# Exibe o mapa inicial
-map_placeholder.folium_static(st.session_state['map'])
-
-# Atualiza a localização do veículo a cada 10 segundos
+# Exibe o mapa inicial e atualiza o marcador do veículo
 while True:
     update_vehicle_location()
+    
+    # Renderiza o mapa com o marcador atualizado
+    map_placeholder = st_folium(st.session_state['map'], width=725, height=500)
+    
     time.sleep(10)
