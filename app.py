@@ -48,19 +48,28 @@ if 'vehicle_marker' not in st.session_state:
 # Cria um espaço reservado para o mapa
 map_placeholder = st.empty()
 
-# Exibir o mapa
-with map_placeholder:
-    st_folium(st.session_state['map'], width=725, height=500, key="main_map")
+# Exibir o mapa inicialmente
+output = st_folium(st.session_state['map'], width=725, height=500, key="main_map")
 
 # Função para atualizar a localização do veículo
 def update_vehicle_location():
     # Simula a obtenção de novas coordenadas
     new_lat, new_lon = -1.469, -48.448  # Simule isso como vindo do Firestore
+    
+    # Captura o estado atual do mapa (posição e zoom)
+    current_center = output['center']
+    current_zoom = output['zoom']
+    
+    # Atualiza a posição do marcador
     st.session_state['vehicle_marker'].location = [new_lat, new_lon]
 
-    # Atualiza o marcador no mapa
+    # Recria o mapa preservando o centro e o zoom
+    updated_map = folium.Map(location=current_center, zoom_start=current_zoom)
+    st.session_state['vehicle_marker'].add_to(updated_map)
+    
+    # Atualiza o mapa no espaço reservado
     with map_placeholder:
-        st_folium(st.session_state['map'], width=725, height=500, key="updated_map")
+        st_folium(updated_map, width=725, height=500, key="updated_map")
 
 # Atualiza a localização do veículo a cada 10 segundos
 while True:
