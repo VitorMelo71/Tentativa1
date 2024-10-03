@@ -34,8 +34,18 @@ st.set_page_config(page_title="Mapa de Rastreamento - OpenStreetMap", layout="ce
 # Carregar a imagem do logotipo
 st.image("https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg", use_column_width=True)
 
+# Caixa de ferramentas para ajuste de resolução
+st.sidebar.header("Ajustar Resolução do Mapa")
+resolution_choice = st.sidebar.radio(
+    "Escolha a resolução do mapa:",
+    ('Padrão (Desktop)', 'Celular')
+)
+
 # Define o tamanho do mapa com base na escolha do usuário
-map_width, map_height = 1000, 800
+if resolution_choice == 'Padrão (Desktop)':
+    map_width, map_height = 1000, 800
+else:
+    map_width, map_height = 400, 400
 
 # Inicializa o mapa uma única vez
 if 'map_initialized' not in st.session_state:
@@ -44,9 +54,8 @@ if 'map_initialized' not in st.session_state:
     st.session_state['center'] = [-1.4758328448621312, -48.45521125264769]  # Coordenadas padrão
     st.session_state['map'] = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
 
-    # Adicionar o marcador personalizado do ônibus com ícone via URL
-    icon = folium.CustomIcon("https://i.imgur.com/LT7pF6Q.png", icon_size=(30, 30))  # Substitua pelo link direto da imagem
-    st.session_state['vehicle_marker'] = folium.Marker(location=st.session_state['center'], popup="Veículo", icon=icon)
+    # Adicionar o marcador tradicional
+    st.session_state['vehicle_marker'] = folium.Marker(location=st.session_state['center'], popup="Veículo")
     st.session_state['vehicle_marker'].add_to(st.session_state['map'])
 
 # Função para atualizar a localização do veículo
