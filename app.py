@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import folium
-from streamlit_folium import folium_static
+from streamlit_folium import st_folium
 import time
 
 # Configuração da API do Firestore
@@ -42,6 +42,7 @@ if 'map_initialized' not in st.session_state:
     st.session_state['map'] = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
     st.session_state['vehicle_marker'] = folium.Marker(location=st.session_state['center'], popup="Veículo")
     st.session_state['vehicle_marker'].add_to(st.session_state['map'])
+    st.session_state['last_click'] = None
 
 # Função para atualizar a localização do veículo
 def update_vehicle_location():
@@ -55,31 +56,32 @@ def update_vehicle_location():
         # Atualiza o marcador para a nova posição
         st.session_state['vehicle_marker'].location = [new_lat, new_lon]
 
-        # Se o botão for clicado, centraliza o mapa na localização do veículo e ajusta o zoom
-        if st.session_state.get('center_on_vehicle', False):
-            st.session_state['map'] = folium.Map(location=[new_lat, new_lon], zoom_start=15, tiles="OpenStreetMap")
-            st.session_state['vehicle_marker'] = folium.Marker(location=[new_lat, new_lon], popup="Veículo")
-            st.session_state['vehicle_marker'].add_to(st.session_state['map'])
-
 # Cria um espaço reservado para o mapa e exibe-o
 map_placeholder = st.empty()
 
 # Botão para centralizar o mapa na localização do ônibus
 if st.button("Ir para a localização do ônibus"):
-    st.session_state['center_on_vehicle'] = True
-else:
-    st.session_state['center_on_vehicle'] = False
+    st.session_state['center'] = [st.session_state['vehicle_marker'].location[0], st.session_state['vehicle_marker'].location[1]]
+    st.session_state['zoom'] = 15
 
-# Exibir o mapa inicialmente
+# Atualiza a localização do veículo sem recriar o mapa inteiro
+update_vehicle_location()
+
+# Exibe o mapa estático e interativo, mantendo a posição e o zoom do usuário
 with map_placeholder:
-    folium_static(st.session_state['map'], width=1000, height=1000)
+    map_state = st_folium(st.session_state['map'], width=1000, height=1000)
 
-# Atualiza a localização do veículo a cada 1 segundo
+# Se o usuário interagir com o mapa (zoom, clique), atualize as variáveis de estado
+if map_state and map_state.get('bounds'):
+    st.session_state['center'] = [map_state['center']['lat'], map_state['center']['lng']]
+    st.session_state['zoom'] = map_state['zoom']
+
+# Atualiza a localização do veículo sem recarregar o mapa
 while True:
     update_vehicle_location()
-
-    # Atualiza o mapa no Streamlit sem recriar todo o mapa
+    
+    # Atualiza o mapa com o novo marcador, mas sem recarregar toda a estrutura
     with map_placeholder:
-        folium_static(st.session_state['map'], width=1000, height=1000)
-
+        st_folium(st.session_state['map'], width=1000, height=1000)
+    
     time.sleep(1)
