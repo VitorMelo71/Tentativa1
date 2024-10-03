@@ -63,9 +63,11 @@ components.html(f"""
           }}
 
           function updateMarker(lat, lon) {{
-            var newPosition = new google.maps.LatLng(lat, lon);
-            marker.setPosition(newPosition);
-            map.setCenter(newPosition);
+            if (marker && map) {{
+              var newPosition = new google.maps.LatLng(lat, lon);
+              marker.setPosition(newPosition);
+              map.setCenter(newPosition);
+            }}
           }}
 
           window.initMap = initMap;
@@ -82,7 +84,9 @@ components.html(f"""
 def update_map(lat, lon):
     components.html(f"""
         <script>
-            updateMarker({lat}, {lon});
+            if (typeof updateMarker !== "undefined") {{
+                updateMarker({lat}, {lon});
+            }}
         </script>
     """, height=0)
 
