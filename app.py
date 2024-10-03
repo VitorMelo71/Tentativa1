@@ -45,7 +45,7 @@ if 'map_initialized' not in st.session_state:
 map_placeholder = st.empty()
 
 # Exibir o mapa inicialmente
-map_placeholder = st_folium(st.session_state['map'], width=725, height=500)
+map_placeholder.st_folium(st.session_state['map'], width=725, height=500)
 
 # Função para atualizar a localização do veículo
 def update_vehicle_location():
@@ -65,8 +65,7 @@ def update_vehicle_location():
             st.session_state['vehicle_marker'].add_to(st.session_state['map'])
 
         # Atualiza o mapa no Streamlit sem recriar o mapa inteiro
-        with map_placeholder:
-            st_folium(st.session_state['map'], width=725, height=500)
+        map_placeholder.st_folium(st.session_state['map'], width=725, height=500)
 
 # Atualiza a localização do veículo a cada 1 segundo
 while True:
