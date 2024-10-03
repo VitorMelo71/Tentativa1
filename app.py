@@ -34,25 +34,34 @@ st.set_page_config(page_title="CEAMAZON GPS - Rastreamento", layout="centered")
 
 st.title("CEAMAZON GPS - Rastreamento")
 
-# Inicializa o mapa do Google Maps
+# Inicializa o mapa do Google Maps apenas uma vez
 def render_map(lat, lon):
     components.html(f"""
         <html>
           <head>
             <script src="https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}"></script>
             <script>
+              var marker;
+              var map;
+
               function initMap() {{
                 var mapOptions = {{
                   center: new google.maps.LatLng({lat}, {lon}),
                   zoom: 15,
                   mapTypeId: google.maps.MapTypeId.ROADMAP
                 }};
-                var map = new google.maps.Map(document.getElementById("map"), mapOptions);
-                var marker = new google.maps.Marker({{
+                map = new google.maps.Map(document.getElementById("map"), mapOptions);
+                marker = new google.maps.Marker({{
                   position: new google.maps.LatLng({lat}, {lon}),
                   map: map,
                   title: "Localização do Veículo"
                 }});
+              }}
+
+              function updateMarker(lat, lon) {{
+                var newPosition = new google.maps.LatLng(lat, lon);
+                marker.setPosition(newPosition);
+                map.setCenter(newPosition);
               }}
             </script>
           </head>
@@ -62,19 +71,25 @@ def render_map(lat, lon):
         </html>
     """, height=500)
 
-# Atualiza a localização no mapa
+# Obtém dados e atualiza o marcador no mapa
+def update_map(lat, lon):
+    components.html(f"""
+        <script>
+            updateMarker({lat}, {lon});
+        </script>
+    """, height=0)
+
+# Pega a posição inicial para renderizar o mapa
 data = get_tracking_data()
 
 if data:
     latest_data = data[0]
     render_map(latest_data['latitude'], latest_data['longitude'])
-else:
-    st.write("Aguardando dados de rastreamento...")
 
-# Pausa para atualizar o ponto a cada 10 segundos
+# Atualiza a posição do veículo a cada 10 segundos
 while True:
     data = get_tracking_data()
     if data:
         latest_data = data[0]
-        render_map(latest_data['latitude'], latest_data['longitude'])
+        update_map(latest_data['latitude'], latest_data['longitude'])
     time.sleep(10)
