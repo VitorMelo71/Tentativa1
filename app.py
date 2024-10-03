@@ -59,8 +59,7 @@ def update_map():
     with map_placeholder:
         st_folium(m, width=725, height=500)
 
-# Atualiza o mapa a cada 10 segundos
-st_autorefresh(interval=10 * 1000, key="autorefresh")
-
-# Chama a função de atualização do mapa
-update_map()
+# Atualiza o mapa manualmente a cada 10 segundos
+while True:
+    update_map()
+    time.sleep(5)
