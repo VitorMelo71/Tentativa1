@@ -45,7 +45,8 @@ if 'map' not in st.session_state:
     st.session_state['vehicle_marker'].add_to(m)
 
     # Renderiza o mapa e salva no estado
-    st.session_state['map'] = st_folium(m, width=725, height=500)
+    st.session_state['map'] = m
+    st_folium(st.session_state['map'], width=725, height=500)
 
 # Função para atualizar a posição do veículo
 def update_vehicle_location():
@@ -60,7 +61,10 @@ def update_vehicle_location():
         # Atualiza a posição do marcador
         st.session_state['vehicle_marker'].location = [new_lat, new_lon]
         
-        # Renderiza o mapa com a nova posição do marcador
+        # Remove o marcador antigo e adiciona o novo no mapa
+        st.session_state['map'].location = [new_lat, new_lon]
+        
+        # Renderiza o mapa atualizado
         st_folium(st.session_state['map'], width=725, height=500)
         
     else:
@@ -69,4 +73,4 @@ def update_vehicle_location():
 # Atualiza a localização do veículo a cada 10 segundos
 while True:
     update_vehicle_location()
-    time.sleep(5)
+    time.sleep(10)
