@@ -38,7 +38,7 @@ st.image("https://raw.githubusercontent.com/VitorMelo71/Tentativa1/main/sa.jpg",
 if 'map_initialized' not in st.session_state:
     st.session_state['map_initialized'] = True
     st.session_state['zoom'] = 15
-    st.session_state['center'] = [-1.4758328448621312, -48.45521125264769]  # Coordenadas padrão
+    st.session_state['center'] = [-1.46906, -48.44755]  # Coordenadas padrão
     st.session_state['map'] = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
     st.session_state['vehicle_marker'] = folium.Marker(location=st.session_state['center'], popup="Veículo")
     st.session_state['vehicle_marker'].add_to(st.session_state['map'])
@@ -55,8 +55,18 @@ def update_vehicle_location():
         # Atualiza o marcador para a nova posição
         st.session_state['vehicle_marker'].location = [new_lat, new_lon]
 
+        # Se o botão for clicado, centraliza o mapa na localização do veículo
+        if st.session_state.get('center_on_vehicle', False):
+            st.session_state['map'].location = [new_lat, new_lon]
+
 # Cria um espaço reservado para o mapa e exibe-o
 map_placeholder = st.empty()
+
+# Botão para centralizar o mapa na localização do ônibus
+if st.button("Ir para a localização do ônibus"):
+    st.session_state['center_on_vehicle'] = True
+else:
+    st.session_state['center_on_vehicle'] = False
 
 # Exibir o mapa inicialmente
 with map_placeholder:
