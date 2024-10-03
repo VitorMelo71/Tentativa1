@@ -42,7 +42,7 @@ def get_device_type():
         unsafe_allow_html=True,
     )
     width = int(st.experimental_get_query_params().get("width", [1000])[0])
-    if width < 400:  # Ajuste para dispositivos móveis com telas menores, como iPhone 11
+    if width < 600:  # Ajuste para dispositivos móveis
         return 'mobile'
     else:
         return 'desktop'
@@ -58,7 +58,7 @@ device_type = get_device_type()
 
 # Define o tamanho do mapa com base no dispositivo
 if device_type == 'mobile':
-    map_width, map_height = 350, 450  # Tamanho ajustado para o iPhone 11
+    map_width, map_height = 350, 450  # Tamanho ajustado para o iPhone 11 ou dispositivos móveis
 else:
     map_width, map_height = 1000, 800  # Tamanho ajustado para computadores
 
