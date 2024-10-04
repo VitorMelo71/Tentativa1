@@ -50,7 +50,7 @@ else:
 # Inicializa o mapa uma única vez
 if 'map_initialized' not in st.session_state:
     st.session_state['map_initialized'] = True
-    st.session_state['zoom'] = 15
+    st.session_state['zoom'] = 7
     st.session_state['center'] = [-1.4758328448621312, -48.45521125264769]  # Coordenadas padrão
     st.session_state['map'] = folium.Map(location=st.session_state['center'], zoom_start=st.session_state['zoom'], tiles="OpenStreetMap")
 
