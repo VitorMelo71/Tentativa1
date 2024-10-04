@@ -45,7 +45,7 @@ resolution_choice = st.sidebar.radio(
 if resolution_choice == 'Padrão (Desktop)':
     map_width, map_height = 1000, 800
 else:
-    map_width, map_height = 300, 400
+    map_width, map_height = 300, 500
 
 # Inicializa o mapa uma única vez
 if 'map_initialized' not in st.session_state:
